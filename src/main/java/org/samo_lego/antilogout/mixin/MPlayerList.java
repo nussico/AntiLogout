@@ -1,8 +1,6 @@
 package org.samo_lego.antilogout.mixin;
 
-import com.mojang.authlib.GameProfile;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import org.samo_lego.antilogout.datatracker.ILogoutRules;
@@ -11,11 +9,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
-import java.util.UUID;
+import net.minecraft.network.Connection;
+import net.minecraft.server.network.CommonListenerCookie;
 
 /**
  * Kicks same players that are in {@link ILogoutRules#DISCONNECTED_PLAYERS} list
@@ -34,9 +31,9 @@ public abstract class MPlayerList {
      * When a player wants to connect but is still online,
      * we allow players with same uuid to be disconnected.
      */
-    @Inject(method = "getPlayerForLogin", at = @At("HEAD"))
-    private void onPlayerLogin(GameProfile gameProfile, ClientInformation clientInformation, CallbackInfoReturnable<ServerPlayer> cir) {
-        var matchingPlayers = getPlayers().stream().filter(player -> player.getUUID().equals(gameProfile.getId())).toList();
+    @Inject(method = "placeNewPlayer(Lnet/minecraft/network/Connection;Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/server/network/CommonListenerCookie;)V", at = @At("HEAD"))
+    private void onPlaceNewPlayer(Connection connection, ServerPlayer serverPlayer, CommonListenerCookie cookie, CallbackInfo ci) {
+        var matchingPlayers = getPlayers().stream().filter(player -> player.getUUID().equals(serverPlayer.getUUID())).toList();
 
         for (ServerPlayer player : matchingPlayers) {
             // Allows disconnect

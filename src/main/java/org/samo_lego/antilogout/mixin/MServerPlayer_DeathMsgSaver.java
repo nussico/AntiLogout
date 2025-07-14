@@ -19,29 +19,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerPlayer.class)
 public abstract class MServerPlayer_DeathMsgSaver {
 
-    private static final int MAX_DEATH_MESSAGE_LENGTH = 256;  // This constant is from mc source code, but it's declared locally there.
+    private static final int MAX_DEATH_MESSAGE_LENGTH = 256;
     @Unique
     private final ServerPlayer self = (ServerPlayer) (Object) this;
 
     @Shadow
-    public abstract ServerLevel serverLevel();
+    public abstract net.minecraft.world.level.Level level();
 
     /**
      * Saves death message for later if player is fake.
      */
     @Inject(method = "die", at = @At("RETURN"))
-    private void constructor(DamageSource damageSource, CallbackInfo ci) {
+    private void onDie(DamageSource damageSource, CallbackInfo ci) {
         if (((ILogoutRules) this).al_isFake()) {
-            boolean seeDeathMsgs = this.serverLevel().getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
+            ServerLevel serverLevel = (ServerLevel) this.level();
+            boolean seeDeathMsgs = serverLevel.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
 
             Component deathMsg;
             if (seeDeathMsgs) {
                 deathMsg = self.getCombatTracker().getDeathMessage();
 
                 if (deathMsg.getString().length() > MAX_DEATH_MESSAGE_LENGTH) {
-                    String string = deathMsg.getString(256);
+                    String string = deathMsg.getString(MAX_DEATH_MESSAGE_LENGTH);
                     var attackTooLongMsg = Component.translatable("death.attack.message_too_long", Component.literal(string).withStyle(ChatFormatting.YELLOW));
-                    deathMsg = Component.translatable("death.attack.even_more_magic", self.getDisplayName()).withStyle(style -> style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, attackTooLongMsg)));
+                    
+                    deathMsg = Component.translatable("death.attack.even_more_magic", self.getDisplayName())
+                        .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(attackTooLongMsg)));
                 }
             } else {
                 deathMsg = CommonComponents.EMPTY;

@@ -3,14 +3,15 @@
   "package": "org.samo_lego.antilogout.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "CLogoutRulesPlayer",
-    "MConnection",
-    "MPlayerList",
-    "MServerCommonPacketListenerImpl",
-    "MServerConnectionListener",
-    "MServerGamePacketListenerImpl",
-    "MServerPlayer_DeathMsgSaver"
-  ],
+     "CLogoutRulesPlayer",
+     "MConnection",
+     "MPlayerList",
+     "MServerCommonPacketListenerImpl",
+     "MServerConnectionListener",
+     "MServerGamePacketListenerImpl",
+     "MServerPlayer_DeathMsgSaver",
+     "MServerPlayer_LogoutRules"
+   ],
   "injectors": {
     "defaultRequire": 1
   }

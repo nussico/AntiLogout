@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 
 	id "com.matthewprenger.cursegradle" version "1.4.0"
@@ -14,6 +14,7 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+	maven { url 'https://maven.fabricmc.net/' }
 	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 	maven { url 'https://jitpack.io' }
 }
@@ -24,6 +25,7 @@ loom {
     mods {
         modid {
             sourceSet sourceSets.main
+            sourceSet sourceSets.client
         }
     }
 
@@ -38,7 +40,7 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modImplementation(include('me.lucko:fabric-permissions-api:0.2-SNAPSHOT'))
+	modImplementation(include('me.lucko:fabric-permissions-api:0.4.0-SNAPSHOT'))
 	modImplementation include("com.github.samolego:Config2Brigadier:${project.config2brigadier_version}")
 }
 
