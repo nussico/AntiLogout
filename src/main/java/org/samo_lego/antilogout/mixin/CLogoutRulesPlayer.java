@@ -1,9 +1,5 @@
 package org.samo_lego.antilogout.mixin;
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.LivingEntity;
 import org.samo_lego.antilogout.AntiLogout;
 import org.samo_lego.antilogout.datatracker.ILogoutRules;
 import org.samo_lego.antilogout.event.EventHandler;
@@ -12,6 +8,11 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Implements {@link ILogoutRules} for {@link ServerPlayer}.
@@ -25,7 +26,8 @@ public abstract class CLogoutRulesPlayer implements ILogoutRules {
 
     @Override
     public boolean al_allowDisconnect() {
-        return this.allowDisconnectTime != -1 && this.allowDisconnectTime <= System.currentTimeMillis() && !AntiLogout.config.disableAllLogouts;
+        return this.allowDisconnectTime != -1 && this.allowDisconnectTime <= System.currentTimeMillis()
+                && !AntiLogout.config.disableAllLogouts;
     }
 
     @Override
@@ -53,7 +55,8 @@ public abstract class CLogoutRulesPlayer implements ILogoutRules {
     }
 
     @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("TAIL"))
-    private void onHurt(ServerLevel serverLevel, DamageSource damageSource, float amount, CallbackInfoReturnable<Boolean> cir) {
+    private void onHurt(ServerLevel serverLevel, DamageSource damageSource, float amount,
+            CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this instanceof ServerPlayer serverPlayer) {
             EventHandler.onHurt(serverPlayer, damageSource);
         }

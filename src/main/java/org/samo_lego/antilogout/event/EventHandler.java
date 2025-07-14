@@ -1,5 +1,10 @@
 package org.samo_lego.antilogout.event;
 
+import static org.samo_lego.antilogout.AntiLogout.config;
+
+import org.jetbrains.annotations.Nullable;
+import org.samo_lego.antilogout.datatracker.ILogoutRules;
+
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.DisconnectionDetails;
@@ -17,10 +22,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
-import org.jetbrains.annotations.Nullable;
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
-
-import static org.samo_lego.antilogout.AntiLogout.config;
 
 /**
  * Takes care of events.
@@ -30,7 +31,6 @@ import static org.samo_lego.antilogout.AntiLogout.config;
  * have to use fabric events.
  */
 public class EventHandler {
-
 
     /**
      * Marks attacker and target as "in combat state".
@@ -42,12 +42,14 @@ public class EventHandler {
      * @param _entityHitResult hit result
      * @return {@link InteractionResult#PASS}
      */
-    public static InteractionResult onAttack(Player attacker, Level _level, InteractionHand _interactionHand, Entity target, @Nullable EntityHitResult _entityHitResult) {
+    public static InteractionResult onAttack(Player attacker, Level _level, InteractionHand _interactionHand,
+            Entity target, @Nullable EntityHitResult _entityHitResult) {
         if (target instanceof ILogoutRules || !config.combatLog.playerHurtOnly) {
             long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
 
             // Mark target
-            if (target instanceof ILogoutRules && !Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
+            if (target instanceof ILogoutRules
+                    && !Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
                 ((ILogoutRules) target).al_setInCombatUntil(allowedDc);
             }
 
@@ -104,7 +106,8 @@ public class EventHandler {
      * @param _sender  packet sender
      * @param _server  minecraft server
      */
-    public static void onPlayerJoin(ServerGamePacketListenerImpl listener, PacketSender _sender, MinecraftServer _server) {
+    public static void onPlayerJoin(ServerGamePacketListenerImpl listener, PacketSender _sender,
+            MinecraftServer _server) {
         final Component deathMessage = ILogoutRules.SKIPPED_DEATH_MESSAGES.get(listener.player.getUUID());
         if (deathMessage != null) {
             listener.player.displayClientMessage(deathMessage, false);

@@ -1,54 +1,55 @@
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
-
-	id "com.matthewprenger.cursegradle" version "1.4.0"
-	id "com.modrinth.minotaur" version "2.+"
+	id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
-sourceCompatibility = JavaVersion.VERSION_21
-targetCompatibility = JavaVersion.VERSION_21
-
-archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+base {
+	archivesName = project.archives_base_name
+}
+
 repositories {
-	maven { url 'https://maven.fabricmc.net/' }
-	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
-	maven { url 'https://jitpack.io' }
+	maven { url = 'https://maven.fabricmc.net/' }
+	maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+	maven { url = 'https://jitpack.io' }
 }
 
 loom {
-    splitEnvironmentSourceSets()
+	splitEnvironmentSourceSets()
 
-    mods {
-        modid {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
-    }
+	mods {
+		"modid" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
 
+configurations {
+    shadowOnly
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modImplementation(include('me.lucko:fabric-permissions-api:0.4.0-SNAPSHOT'))
-	modImplementation include("com.github.samolego:Config2Brigadier:${project.config2brigadier_version}")
+	modImplementation "me.lucko:fabric-permissions-api:${project['fabric-permissions-api']}"
+	implementation "com.electronwill.night-config:core:${project.night_config_version_core}"
+	implementation "com.electronwill.night-config:toml:${project.night_config_version_toml}"
+	shadowOnly "com.electronwill.night-config:core:${project.night_config_version_core}"
+	shadowOnly "com.electronwill.night-config:toml:${project.night_config_version_toml}"
 }
 
 processResources {
 	inputs.property "version", project.version
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": inputs.properties.version
 	}
 }
 
@@ -57,84 +58,38 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
 	withSourcesJar()
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
+	inputs.property "archivesName", project.base.archivesName
+
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}" }
+		rename { "${it}_${inputs.properties.archivesName}" }
 	}
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowOnly]
+    relocate 'com.electronwill.nightconfig', 'org.samo_lego.antilogout.shadow.nightconfig'
+}
+remapJar {
+    dependsOn shadowJar
+    input.set(shadowJar.archiveFile)
 }
 
 def ENV = System.getenv()
 
-// configure the maven publication
 publishing {
 	publications {
-		mavenJava(MavenPublication) {
+		create("mavenJava", MavenPublication) {
+			artifactId = project.archives_base_name
 			from components.java
 		}
 	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
 	repositories {
 		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
 	}
-}
-
-
-// from FAPI https://github.com/FabricMC/fabric/blob/1.16/build.gradle
-curseforge {
-	if (ENV.CURSEFORGE_API_KEY) {
-		apiKey = ENV.CURSEFORGE_API_KEY
-	}
-
-	project {
-		id = "817455"
-		changelog = "A changelog can be found at https://github.com/samolego/AntiLogout/releases/tag/${version}"
-		releaseType = "release"
-		addGameVersion "${project.minecraft_version}"
-		addGameVersion "Fabric"
-		addGameVersion "Quilt"
-
-		mainArtifact(file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar")) {
-			displayName = "[${project.minecraft_version}] AntiLogout ${version}"
-		}
-
-		afterEvaluate {
-			uploadTask.dependsOn("remapJar")
-		}
-	}
-
-	options {
-		forgeGradleIntegration = false
-	}
-}
-
-
-tasks.modrinth {
-	onlyIf {
-		ENV.MODRINTH_TOKEN
-	}
-}
-
-modrinth {
-	token = ENV.MODRINTH_TOKEN
-	projectId = "gnfTfbZi"
-	changelog = ENV.CHANGELOG ?: "A changelog can be found at https://github.com/samolego/AntiLogout/releases/tag/${version}"
-	versionNumber = version
-	versionName = "[${project.minecraft_version}] AntiLogout ${version}"
-	versionType = "release"
-
-	uploadFile = file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar")
-
-	gameVersions = [project.minecraft_version]
-	loaders = ['fabric', 'quilt']
-
 }

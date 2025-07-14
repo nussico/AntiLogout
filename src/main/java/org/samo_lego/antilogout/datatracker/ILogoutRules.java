@@ -1,9 +1,6 @@
 package org.samo_lego.antilogout.datatracker;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.ApiStatus;
+import static org.samo_lego.antilogout.AntiLogout.config;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,7 +8,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.samo_lego.antilogout.AntiLogout.config;
+import org.jetbrains.annotations.ApiStatus;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 
 public interface ILogoutRules {
 
@@ -33,7 +34,8 @@ public interface ILogoutRules {
     /**
      * Sets the time when the player can disconnect.
      *
-     * @param systemTime time in milliseconds at which the player can disconnect without staying in the world.
+     * @param systemTime time in milliseconds at which the player can disconnect
+     *                   without staying in the world.
      */
     void al_setAllowDisconnectAt(long systemTime);
 
@@ -58,8 +60,8 @@ public interface ILogoutRules {
             long duration = (long) Math.ceil((systemTime - System.currentTimeMillis()) / 1000.0D);
             ((ServerPlayer) this).displayClientMessage(this.al$getStartCombatMessage(duration), true);
 
-            this.al$delay(systemTime, () ->
-                    ((ServerPlayer) this).displayClientMessage(this.al$getEndCombatMessage(duration), true));
+            this.al$delay(systemTime,
+                    () -> ((ServerPlayer) this).displayClientMessage(this.al$getEndCombatMessage(duration), true));
         }
     }
 
@@ -86,7 +88,6 @@ public interface ILogoutRules {
                         .withStyle(ChatFormatting.RED));
     }
 
-
     @ApiStatus.Internal
     default Component al$getEndCombatMessage(long duration) {
         return Component.literal("[AL] ").withStyle(ChatFormatting.DARK_GREEN).append(
@@ -100,7 +101,6 @@ public interface ILogoutRules {
      * @return true if fake, false otherwise
      */
     boolean al_isFake();
-
 
     /**
      * Called when the player disconnects.
