@@ -44,18 +44,20 @@ public class EventHandler {
      */
     public static InteractionResult onAttack(Player attacker, Level _level, InteractionHand _interactionHand,
             Entity target, @Nullable EntityHitResult _entityHitResult) {
-        if (target instanceof ILogoutRules || !config.combatLog.playerHurtOnly) {
+        if (target instanceof Player) {
             long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
 
             // Mark target
-            if (target instanceof ILogoutRules
+            if (target instanceof ILogoutRules logoutTarget
                     && !Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
-                ((ILogoutRules) target).al_setInCombatUntil(allowedDc);
+                logoutTarget.al_setInCombatUntil(allowedDc);
             }
 
             // Mark attacker
-            if (!Permissions.check(attacker, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
-                ((ILogoutRules) attacker).al_setInCombatUntil(allowedDc);
+            if (attacker instanceof ILogoutRules logoutAttacker
+                    && !Permissions.check(attacker, "antilogout.bypass.combat",
+                            config.combatLog.bypassPermissionLevel)) {
+                logoutAttacker.al_setInCombatUntil(allowedDc);
             }
         }
         return InteractionResult.PASS;
@@ -85,16 +87,19 @@ public class EventHandler {
      */
     public static void onHurt(ServerPlayer target, DamageSource damageSource) {
         long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
-        if (damageSource.getEntity() instanceof Projectile p && p.getOwner() instanceof ServerPlayer attacker) {
-            if (!Permissions.check(attacker, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
-                ((ILogoutRules) attacker).al_setInCombatUntil(allowedDc);
+        if (target instanceof Player) {
+            boolean trigger = false;
+            if (config.combatLog.playerHurtOnly) {
+                // Only player or player projectile
+                trigger = (damageSource.getEntity() instanceof Player) ||
+                        (damageSource.getEntity() instanceof Projectile p && p.getOwner() instanceof Player);
+            } else {
+                // Any damage triggers
+                trigger = true;
             }
-
-            if (!Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
+            if (trigger) {
                 ((ILogoutRules) target).al_setInCombatUntil(allowedDc);
             }
-        } else if (damageSource.getEntity() instanceof Player || !config.combatLog.playerHurtOnly) {
-            ((ILogoutRules) target).al_setInCombatUntil(allowedDc);
         }
     }
 

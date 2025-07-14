@@ -1,7 +1,11 @@
 package org.samo_lego.antilogout.config;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
@@ -21,12 +25,23 @@ public class LogoutConfig {
         public String combatEnterMessage = "You are in combat!";
         public String combatEndMessage = "You are no longer in combat!";
         public int combatTimeout = 30;
-        public boolean playerHurtOnly = false;
+        public boolean playerHurtOnly = true;
         public int bypassPermissionLevel = 4;
     }
 
     public static LogoutConfig load() {
         Path configPath = Paths.get("config", "antilogout.toml");
+        // --- Merge duplicate sections before loading ---
+        if (Files.exists(configPath)) {
+            try {
+                String content = Files.readString(configPath);
+                String merged = mergeDuplicateTomlSections(content, "afk");
+                merged = mergeDuplicateTomlSections(merged, "combatLog");
+                Files.writeString(configPath, merged);
+            } catch (IOException ignored) {
+            }
+        }
+        // --- End merge logic ---
         CommentedFileConfig configData = CommentedFileConfig.builder(configPath).autosave().build();
         configData.load();
 
@@ -52,7 +67,7 @@ public class LogoutConfig {
         config.combatLog.combatEndMessage = configData.getOrElse("combatLog.combatEndMessage",
                 "You are no longer in combat!");
         config.combatLog.combatTimeout = configData.getOrElse("combatLog.combatTimeout", 30);
-        config.combatLog.playerHurtOnly = configData.getOrElse("combatLog.playerHurtOnly", false);
+        config.combatLog.playerHurtOnly = configData.getOrElse("combatLog.playerHurtOnly", true);
         config.combatLog.bypassPermissionLevel = configData.getOrElse("combatLog.bypassPermissionLevel", 4);
 
         return config;
@@ -60,6 +75,17 @@ public class LogoutConfig {
 
     public void save() {
         Path configPath = Paths.get("config", "antilogout.toml");
+        // --- Merge duplicate sections before saving ---
+        if (Files.exists(configPath)) {
+            try {
+                String content = Files.readString(configPath);
+                String merged = mergeDuplicateTomlSections(content, "afk");
+                merged = mergeDuplicateTomlSections(merged, "combatLog");
+                Files.writeString(configPath, merged);
+            } catch (IOException ignored) {
+            }
+        }
+        // --- End merge logic ---
         CommentedFileConfig configData = CommentedFileConfig.builder(configPath).autosave().build();
         configData.load();
         configData.set("disableAllLogouts", this.disableAllLogouts);
@@ -75,5 +101,51 @@ public class LogoutConfig {
         configData.set("combatLog.playerHurtOnly", this.combatLog.playerHurtOnly);
         configData.set("combatLog.bypassPermissionLevel", this.combatLog.bypassPermissionLevel);
         configData.save();
+    }
+
+    // Merges duplicate TOML sections into one, keeping only the last value for each
+    // key
+    private static String mergeDuplicateTomlSections(String toml, String section) {
+        String[] lines = toml.split("\\R");
+        Map<String, String> merged = new LinkedHashMap<>();
+        boolean inSection = false;
+        for (String line : lines) {
+            if (line.trim().equals("[" + section + "]")) {
+                inSection = true;
+                continue;
+            }
+            if (line.startsWith("[")) {
+                inSection = false;
+            }
+            if (inSection && line.contains("=")) {
+                String[] kv = line.split("=", 2);
+                String key = kv[0].trim();
+                String value = kv[1].trim();
+                // Always overwrite, so the last value is kept
+                merged.put(key, value);
+            }
+        }
+        // Remove all [section] blocks and their keys
+        StringBuilder sb = new StringBuilder();
+        boolean skip = false;
+        for (String line : lines) {
+            if (line.trim().equals("[" + section + "]")) {
+                skip = true;
+                continue;
+            }
+            if (skip && (line.startsWith("[") || line.isBlank())) {
+                skip = false;
+            }
+            if (!skip)
+                sb.append(line).append("\n");
+        }
+        // Add merged section at the end
+        if (!merged.isEmpty()) {
+            sb.append("[" + section + "]\n");
+            for (var entry : merged.entrySet()) {
+                sb.append(entry.getKey()).append(" = ").append(entry.getValue()).append("\n");
+            }
+        }
+        return sb.toString();
     }
 }
