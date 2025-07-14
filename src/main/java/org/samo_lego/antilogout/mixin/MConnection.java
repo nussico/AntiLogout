@@ -30,6 +30,15 @@ public abstract class MConnection {
     private void al_handleDisconnection(CallbackInfo ci) {
         if (this.getPacketListener() instanceof ServerGamePacketListenerImpl listener) {
             if (!((ILogoutRules) listener.getPlayer()).al_allowDisconnect()) {
+                // Broadcast combat logout message
+                var player = listener.getPlayer();
+                var server = player.getServer();
+                if (server != null) {
+                    server.getPlayerList().broadcastSystemMessage(
+                            net.minecraft.network.chat.Component
+                                    .literal(player.getName().getString() + " disconnected while in combat!"),
+                            false);
+                }
                 this.channel.close();
                 ((ILogoutRules) listener.getPlayer()).al_onRealDisconnect();
                 ci.cancel();
