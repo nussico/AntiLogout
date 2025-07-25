@@ -50,9 +50,9 @@ All options are in `config/antilogout.toml`.
 ## Commands
 
 - `/afk`  
-  Set yourself AFK for the max time. (Permission level 1)
+  Set yourself AFK for the max time. (Permission level 0)
 - `/afk time <seconds>`  
-  Set yourself AFK for a specific time (`-1` for unlimited). (Permission level 1)
+  Set yourself AFK for a specific time (`-1` for unlimited). (Permission level 0)
 - `/afk players <targets> [time <seconds>]`  
   Set other players AFK. (Admin only, permission level 4)
 - `/antilogout reload`  
@@ -66,7 +66,7 @@ All options are in `config/antilogout.toml`.
 
 - `antilogout.bypass.combat` — Bypass combat tagging.
 - `antilogout.command.afk` — Use `/afk` (level 1).
-- `antilogout.command.afk.time` — Set AFK time for yourself (level 1).
+- `antilogout.command.afk.time` — Set AFK time for yourself (level 0).
 - `antilogout.command.afk.players` — Set other players AFK (admin only, level 4).
 - `antilogout.command.antilogout` — Use `/antilogout` admin commands (level 4).
 - `antilogout.command.antilogout.reload` — Reload config (level 4).
