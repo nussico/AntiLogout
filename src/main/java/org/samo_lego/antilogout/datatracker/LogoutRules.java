@@ -1,7 +1,5 @@
 package org.samo_lego.antilogout.datatracker;
 
-import static org.samo_lego.antilogout.AntiLogout.config;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -9,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.samo_lego.antilogout.AntiLogout;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -55,7 +54,7 @@ public interface LogoutRules {
     default void al_setInCombatUntil(long systemTime) {
         this.al_setAllowDisconnectAt(systemTime);
 
-        if (config.combatLog.notifyOnCombat) {
+        if (AntiLogout.config.combatLog.notifyOnCombat) {
             // Inform player
             long duration = (long) Math.ceil((systemTime - System.currentTimeMillis()) / 1000.0D);
             ((ServerPlayer) this).displayClientMessage(this.al$getStartCombatMessage(duration), true);
@@ -84,14 +83,14 @@ public interface LogoutRules {
     @ApiStatus.Internal
     default Component al$getStartCombatMessage(long duration) {
         return Component.literal("[AL] ").withStyle(ChatFormatting.DARK_RED).append(
-                Component.translatable(config.combatLog.combatEnterMessage, duration)
+                Component.translatable(AntiLogout.config.combatLog.combatEnterMessage, duration)
                         .withStyle(ChatFormatting.RED));
     }
 
     @ApiStatus.Internal
     default Component al$getEndCombatMessage(long duration) {
         return Component.literal("[AL] ").withStyle(ChatFormatting.DARK_GREEN).append(
-                Component.translatable(config.combatLog.combatEndMessage, duration)
+                Component.translatable(AntiLogout.config.combatLog.combatEndMessage, duration)
                         .withStyle(ChatFormatting.GREEN));
     }
 
@@ -106,4 +105,10 @@ public interface LogoutRules {
      * Called when the player disconnects.
      */
     void al_onRealDisconnect();
+
+    /**
+     * Gets the current system time (ms) at which the player is allowed to disconnect.
+     * Used for updating timers on config reload.
+     */
+    long al_getAllowDisconnectTime();
 }

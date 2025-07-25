@@ -36,7 +36,7 @@ public abstract class MixinConnection {
                 if (server != null) {
                     server.getPlayerList().broadcastSystemMessage(
                             net.minecraft.network.chat.Component
-                                    .literal(player.getName().getString() + " disconnected while in combat!"),
+                                    .literal(player.getName().getString() + " " + org.samo_lego.antilogout.AntiLogout.config.combatLog.combatDisconnectMessage),
                             false);
                 }
                 this.channel.close();

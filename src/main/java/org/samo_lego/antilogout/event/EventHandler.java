@@ -1,8 +1,7 @@
 package org.samo_lego.antilogout.event;
 
-import static org.samo_lego.antilogout.AntiLogout.config;
-
 import org.jetbrains.annotations.Nullable;
+import org.samo_lego.antilogout.AntiLogout;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -45,18 +44,18 @@ public class EventHandler {
     public static InteractionResult onAttack(Player attacker, Level _level, InteractionHand _interactionHand,
             Entity target, @Nullable EntityHitResult _entityHitResult) {
         if (target instanceof Player) {
-            long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
+            long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
 
             // Mark target
             if (target instanceof LogoutRules logoutTarget
-                    && !Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
+                    && !Permissions.check(target, "antilogout.bypass.combat", AntiLogout.config.combatLog.bypassPermissionLevel)) {
                 logoutTarget.al_setInCombatUntil(allowedDc);
             }
 
             // Mark attacker
             if (attacker instanceof LogoutRules logoutAttacker
                     && !Permissions.check(attacker, "antilogout.bypass.combat",
-                            config.combatLog.bypassPermissionLevel)) {
+                            AntiLogout.config.combatLog.bypassPermissionLevel)) {
                 logoutAttacker.al_setInCombatUntil(allowedDc);
             }
         }
@@ -86,10 +85,10 @@ public class EventHandler {
      * @param damageSource damage source
      */
     public static void onHurt(ServerPlayer target, DamageSource damageSource) {
-        long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
+        long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
         if (target instanceof Player) {
             boolean trigger = false;
-            if (config.combatLog.playerHurtOnly) {
+            if (AntiLogout.config.combatLog.playerHurtOnly) {
                 // Only player or player projectile
                 trigger = (damageSource.getEntity() instanceof Player) ||
                         (damageSource.getEntity() instanceof Projectile p && p.getOwner() instanceof Player);

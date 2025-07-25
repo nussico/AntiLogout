@@ -35,10 +35,10 @@ public class AntiLogoutCommand {
     };
 
     // Maps user-friendly option names to config field accessors
-    private static Object getConfigValueByOption(String option, org.samo_lego.antilogout.config.LogoutConfig config) {
+    private static Object getConfigValueByOption(String option, org.samo_lego.antilogout.config.ConfigManager.Config config) {
         switch (option) {
             case "disableAllLogouts":
-                return config.disableAllLogouts;
+                return config.general.disableAllLogouts;
             case "combatTimeout":
                 return config.combatLog.combatTimeout;
             case "notifyOnCombat":
@@ -64,11 +64,11 @@ public class AntiLogoutCommand {
 
     // Sets config value by user-friendly option name
     private static boolean setConfigValueByOption(String option, String value,
-            org.samo_lego.antilogout.config.LogoutConfig config) {
+            org.samo_lego.antilogout.config.ConfigManager.Config config) {
         try {
             switch (option) {
                 case "disableAllLogouts":
-                    config.disableAllLogouts = Boolean.parseBoolean(value);
+                    config.general.disableAllLogouts = Boolean.parseBoolean(value);
                     return true;
                 case "combatTimeout":
                     config.combatLog.combatTimeout = Integer.parseInt(value);
@@ -105,86 +105,122 @@ public class AntiLogoutCommand {
         }
     }
 
+    /**
+     * Utility method to format the status message for the config.
+     *
+     * @param config LogoutConfig
+     * @return formatted status string
+     */
+    private static String formatStatus(org.samo_lego.antilogout.config.ConfigManager.Config config) {
+        return "Current AntiLogout Config:\n" +
+            "  disableAllLogouts: " + config.general.disableAllLogouts + "\n" +
+            "  combatTimeout: " + config.combatLog.combatTimeout + "\n" +
+            "  notifyOnCombat: " + config.combatLog.notifyOnCombat + "\n" +
+            "  combatEnterMessage: " + config.combatLog.combatEnterMessage + "\n" +
+            "  combatEndMessage: " + config.combatLog.combatEndMessage + "\n" +
+            "  playerHurtOnly: " + config.combatLog.playerHurtOnly + "\n" +
+            "  bypassPermissionLevel: " + config.combatLog.bypassPermissionLevel + "\n" +
+            "  afkMessage: " + config.afk.afkMessage + "\n" +
+            "  permissionLevel: " + config.afk.permissionLevel + "\n" +
+            "  maxAfkTime: " + config.afk.maxAfkTime;
+    }
+
+    /**
+     * Registers /antilogout command with improved feedback and help.
+     * Usage: /antilogout help
+     *        /antilogout reload
+     *        /antilogout status
+     *        /antilogout get <option>
+     *        /antilogout set <option> <value>
+     * Alias: /al
+     *
+     * @param dispatcher command dispatcher
+     */
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(
-                Commands.literal("antilogout")
-                        .then(Commands.literal("reload")
-                                .requires(source -> source.hasPermission(2))
-                                .executes(ctx -> {
-                                    org.samo_lego.antilogout.AntiLogout.config = org.samo_lego.antilogout.config.LogoutConfig
-                                            .load();
-                                    ctx.getSource().sendSuccess(() -> Component.literal("AntiLogout config reloaded!"),
-                                            true);
+            Commands.literal("antilogout")
+                .requires(source -> source.hasPermission(4))
+                .then(Commands.literal("help")
+                    .executes(ctx -> {
+                        ctx.getSource().sendSuccess(() -> Component.literal(
+                            "/antilogout reload - Reloads the config file.\n" +
+                            "/antilogout status - Shows current config values.\n" +
+                            "/antilogout get <option> - Gets a config value.\n" +
+                            "/antilogout set <option> <value> - Sets a config value.\n" +
+                            "Options: disableAllLogouts, combatTimeout, notifyOnCombat, combatEnterMessage, combatEndMessage, playerHurtOnly, bypassPermissionLevel, afkMessage, permissionLevel, maxAfkTime"
+                        ), false);
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("reload")
+                    .requires(source -> source.hasPermission(2))
+                    .executes(ctx -> {
+                        org.samo_lego.antilogout.config.ConfigManager.load();
+                        ctx.getSource().sendSuccess(() -> Component.literal("AntiLogout config reloaded! (All changes applied immediately.)"), true);
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("status")
+                    .executes(ctx -> {
+                        var config = org.samo_lego.antilogout.config.ConfigManager.config;
+                        ctx.getSource().sendSuccess(() -> Component.literal(formatStatus(config)), false);
+                        return 1;
+                    })
+                )
+                .then(Commands.literal("get")
+                    .then(Commands.argument("option", StringArgumentType.word())
+                        .suggests(CONFIG_OPTION_SUGGESTIONS)
+                        .executes(ctx -> {
+                            var config = org.samo_lego.antilogout.config.ConfigManager.config;
+                            String option = StringArgumentType.getString(ctx, "option");
+                            Object value = getConfigValueByOption(option, config);
+                            if (value == null) {
+                                ctx.getSource().sendFailure(
+                                    Component.literal("Unknown option: " + option + ". Use /antilogout help for a list of options."));
+                                return 0;
+                            }
+                            ctx.getSource().sendSuccess(() -> Component.literal(option + ": " + value), false);
+                            return 1;
+                        })
+                    )
+                )
+                .then(Commands.literal("set")
+                    .requires(source -> source.hasPermission(2))
+                    .then(Commands.argument("option", StringArgumentType.word())
+                        .suggests(CONFIG_OPTION_SUGGESTIONS)
+                        .then(Commands.argument("value", StringArgumentType.greedyString())
+                            .suggests((context, builder) -> {
+                                String option = StringArgumentType.getString(context, "option");
+                                if (option.equals("disableAllLogouts")
+                                        || option.equals("notifyOnCombat")
+                                        || option.equals("playerHurtOnly")) {
+                                    builder.suggest("true");
+                                    builder.suggest("false");
+                                }
+                                return CompletableFuture.completedFuture(builder.build());
+                            })
+                            .executes(ctx -> {
+                                var config = org.samo_lego.antilogout.config.ConfigManager.config;
+                                String option = StringArgumentType.getString(ctx, "option");
+                                String value = StringArgumentType.getString(ctx, "value");
+                                boolean success = setConfigValueByOption(option, value, config);
+                                if (success) {
+                                    org.samo_lego.antilogout.config.ConfigManager.save();
+                                    org.samo_lego.antilogout.config.ConfigManager.load();
+                                    ctx.getSource().sendSuccess(
+                                        () -> Component.literal("Set " + option + " to " + value + ". (Change applied immediately.)"),
+                                        true);
                                     return 1;
-                                }))
-                        .then(Commands.literal("status")
-                                .executes(ctx -> {
-                                    var config = org.samo_lego.antilogout.AntiLogout.config;
-                                    String status = "disableAllLogouts: " + config.disableAllLogouts +
-                                            "\ncombatTimeout: " + config.combatLog.combatTimeout +
-                                            "\nnotifyOnCombat: " + config.combatLog.notifyOnCombat +
-                                            "\ncombatEnterMessage: " + config.combatLog.combatEnterMessage +
-                                            "\ncombatEndMessage: " + config.combatLog.combatEndMessage +
-                                            "\nplayerHurtOnly: " + config.combatLog.playerHurtOnly +
-                                            "\nbypassPermissionLevel: " + config.combatLog.bypassPermissionLevel +
-                                            "\nafkMessage: " + config.afk.afkMessage +
-                                            "\npermissionLevel: " + config.afk.permissionLevel +
-                                            "\nmaxAfkTime: " + config.afk.maxAfkTime;
-                                    ctx.getSource().sendSuccess(() -> Component.literal(status), false);
-                                    return 1;
-                                }))
-                        .then(Commands.literal("get")
-                                .then(Commands.argument("option", StringArgumentType.word())
-                                        .suggests(CONFIG_OPTION_SUGGESTIONS)
-                                        .executes(ctx -> {
-                                            var config = org.samo_lego.antilogout.AntiLogout.config;
-                                            String option = StringArgumentType.getString(ctx, "option");
-                                            Object value = getConfigValueByOption(option, config);
-                                            if (value == null) {
-                                                ctx.getSource().sendFailure(
-                                                        Component.literal("Unknown option: " + option));
-                                                return 0;
-                                            }
-                                            ctx.getSource().sendSuccess(() -> Component.literal(option + ": " + value),
-                                                    false);
-                                            return 1;
-                                        })))
-                        .then(Commands.literal("set")
-                                .requires(source -> source.hasPermission(2))
-                                .then(Commands.argument("option", StringArgumentType.word())
-                                        .suggests(CONFIG_OPTION_SUGGESTIONS)
-                                        .then(Commands.argument("value", StringArgumentType.greedyString())
-                                                .suggests((context, builder) -> {
-                                                    String option = StringArgumentType.getString(context, "option");
-                                                    if (option.equals("disableAllLogouts")
-                                                            || option.equals("notifyOnCombat")
-                                                            || option.equals("playerHurtOnly")) {
-                                                        builder.suggest("true");
-                                                        builder.suggest("false");
-                                                    }
-                                                    return CompletableFuture.completedFuture(builder.build());
-                                                })
-                                                .executes(ctx -> {
-                                                    var config = org.samo_lego.antilogout.AntiLogout.config;
-                                                    String option = StringArgumentType.getString(ctx, "option");
-                                                    String value = StringArgumentType.getString(ctx, "value");
-                                                    boolean success = setConfigValueByOption(option, value, config);
-                                                    if (success) {
-                                                        config.save();
-                                                        org.samo_lego.antilogout.AntiLogout.config = org.samo_lego.antilogout.config.LogoutConfig
-                                                                .load();
-                                                        ctx.getSource().sendSuccess(
-                                                                () -> Component
-                                                                        .literal("Set " + option + " to " + value),
-                                                                true);
-                                                        return 1;
-                                                    } else {
-                                                        ctx.getSource().sendFailure(
-                                                                Component.literal(
-                                                                        "Invalid or unknown value for " + option));
-                                                        return 0;
-                                                    }
-                                                })))));
+                                } else {
+                                    ctx.getSource().sendFailure(
+                                        Component.literal("Invalid or unknown value for " + option + ". Use /antilogout help for valid options and value types."));
+                                    return 0;
+                                }
+                            })
+                        )
+                    )
+                )
+        );
         // Alias
         dispatcher.register(literal("al").redirect(dispatcher.getRoot().getChild("antilogout")));
     }
