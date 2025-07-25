@@ -6,7 +6,7 @@ import static org.samo_lego.antilogout.AntiLogout.config;
 import java.util.Collections;
 
 import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
@@ -85,7 +85,7 @@ public class AfkCommand {
                 for (var player : players) {
                         long disconnectAt = timeLimit == -1 ? -1
                                         : System.currentTimeMillis() + Math.round(timeLimit * 1000);
-                        ((ILogoutRules) player).al_setAllowDisconnectAt(disconnectAt);
+                        ((LogoutRules) player).al_setAllowDisconnectAt(disconnectAt);
                         player.connection.disconnect(AntiLogout.AFK_MESSAGE);
                 }
                 return players.iterator().hasNext() ? 0 : 1;

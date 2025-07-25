@@ -1,7 +1,7 @@
 package org.samo_lego.antilogout.mixin;
 
 import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.samo_lego.antilogout.event.EventHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,10 +15,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 
 /**
- * Implements {@link ILogoutRules} for {@link ServerPlayer}.
+ * Implements {@link LogoutRules} for {@link ServerPlayer}.
  */
 @Mixin(LivingEntity.class)
-public abstract class CLogoutRulesPlayer implements ILogoutRules {
+public abstract class MixinLogoutRulesPlayer implements LogoutRules {
     @Unique
     private long allowDisconnectTime = 0;
     @Unique
