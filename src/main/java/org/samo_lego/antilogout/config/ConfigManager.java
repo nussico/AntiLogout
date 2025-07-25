@@ -38,36 +38,36 @@ public class ConfigManager {
         // Overwrite with only the correct structure
         configData.clear();
         // General
-        configData.set("general.disableAllLogouts", config.general.disableAllLogouts);
         configData.setComment("general.disableAllLogouts", "Disable all logout features");
-        configData.set("general.debug", config.general.debug);
+        configData.set("general.disableAllLogouts", config.general.disableAllLogouts);
         configData.setComment("general.debug", "Enable debug logging");
+        configData.set("general.debug", config.general.debug);
         // AFK
+        configData.setComment("afk.afkMessage", "Message shown when a player is AFK");
         configData.set("afk.afkMessage", config.afk.afkMessage);
-        configData.setComment("afk.afkMessage", "AFK message");
+        configData.setComment("afk.permissionLevel", "Permission level required for /afk");
         configData.set("afk.permissionLevel", config.afk.permissionLevel);
-        configData.setComment("afk.permissionLevel", "AFK command permission level");
-        configData.set("afk.maxAfkTime", config.afk.maxAfkTime);
         configData.setComment("afk.maxAfkTime", "Max AFK time in seconds");
+        configData.set("afk.maxAfkTime", config.afk.maxAfkTime);
+        configData.setComment("afk.afkCombatMessage", "Message if player tries AFK in combat");
         configData.set("afk.afkCombatMessage", config.afk.afkCombatMessage);
-        configData.setComment("afk.afkCombatMessage", "Message for AFK in combat");
-        configData.set("afk.afkBroadcastMessage", config.afk.afkBroadcastMessage);
         configData.setComment("afk.afkBroadcastMessage", "Broadcast when player is AFK. {player} = name");
+        configData.set("afk.afkBroadcastMessage", config.afk.afkBroadcastMessage);
         // CombatLog
-        configData.set("combatLog.notifyOnCombat", config.combatLog.notifyOnCombat);
         configData.setComment("combatLog.notifyOnCombat", "Notify on combat");
-        configData.set("combatLog.combatEnterMessage", config.combatLog.combatEnterMessage);
+        configData.set("combatLog.notifyOnCombat", config.combatLog.notifyOnCombat);
         configData.setComment("combatLog.combatEnterMessage", "Message on entering combat");
-        configData.set("combatLog.combatEndMessage", config.combatLog.combatEndMessage);
+        configData.set("combatLog.combatEnterMessage", config.combatLog.combatEnterMessage);
         configData.setComment("combatLog.combatEndMessage", "Message on leaving combat");
-        configData.set("combatLog.combatTimeout", config.combatLog.combatTimeout);
+        configData.set("combatLog.combatEndMessage", config.combatLog.combatEndMessage);
         configData.setComment("combatLog.combatTimeout", "Combat timeout in seconds");
-        configData.set("combatLog.playerHurtOnly", config.combatLog.playerHurtOnly);
+        configData.set("combatLog.combatTimeout", config.combatLog.combatTimeout);
         configData.setComment("combatLog.playerHurtOnly", "Only player damage triggers");
-        configData.set("combatLog.bypassPermissionLevel", config.combatLog.bypassPermissionLevel);
+        configData.set("combatLog.playerHurtOnly", config.combatLog.playerHurtOnly);
         configData.setComment("combatLog.bypassPermissionLevel", "Permission to bypass combat log");
-        configData.set("combatLog.combatDisconnectMessage", config.combatLog.combatDisconnectMessage);
+        configData.set("combatLog.bypassPermissionLevel", config.combatLog.bypassPermissionLevel);
         configData.setComment("combatLog.combatDisconnectMessage", "Message for combat log disconnect");
+        configData.set("combatLog.combatDisconnectMessage", config.combatLog.combatDisconnectMessage);
         configData.save();
     }
 
