@@ -3,7 +3,7 @@ package org.samo_lego.antilogout.event;
 import static org.samo_lego.antilogout.AntiLogout.config;
 
 import org.jetbrains.annotations.Nullable;
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
@@ -48,13 +48,13 @@ public class EventHandler {
             long allowedDc = System.currentTimeMillis() + Math.round(config.combatLog.combatTimeout * 1000);
 
             // Mark target
-            if (target instanceof ILogoutRules logoutTarget
+            if (target instanceof LogoutRules logoutTarget
                     && !Permissions.check(target, "antilogout.bypass.combat", config.combatLog.bypassPermissionLevel)) {
                 logoutTarget.al_setInCombatUntil(allowedDc);
             }
 
             // Mark attacker
-            if (attacker instanceof ILogoutRules logoutAttacker
+            if (attacker instanceof LogoutRules logoutAttacker
                     && !Permissions.check(attacker, "antilogout.bypass.combat",
                             config.combatLog.bypassPermissionLevel)) {
                 logoutAttacker.al_setInCombatUntil(allowedDc);
@@ -70,7 +70,7 @@ public class EventHandler {
      * @param _damageSource damage source of death
      */
     public static void onDeath(LivingEntity deadEntity, DamageSource _damageSource) {
-        if (deadEntity instanceof ILogoutRules player && player.al_isFake()) {
+        if (deadEntity instanceof LogoutRules player && player.al_isFake()) {
             // Remove player from online players
             ((ServerPlayer) player).connection.onDisconnect(new DisconnectionDetails(Component.empty()));
         }
@@ -98,7 +98,7 @@ public class EventHandler {
                 trigger = true;
             }
             if (trigger) {
-                ((ILogoutRules) target).al_setInCombatUntil(allowedDc);
+                ((LogoutRules) target).al_setInCombatUntil(allowedDc);
             }
         }
     }
@@ -113,11 +113,11 @@ public class EventHandler {
      */
     public static void onPlayerJoin(ServerGamePacketListenerImpl listener, PacketSender _sender,
             MinecraftServer _server) {
-        final Component deathMessage = ILogoutRules.SKIPPED_DEATH_MESSAGES.get(listener.player.getUUID());
+        final Component deathMessage = LogoutRules.SKIPPED_DEATH_MESSAGES.get(listener.player.getUUID());
         if (deathMessage != null) {
             listener.player.displayClientMessage(deathMessage, false);
             listener.send(new ClientboundPlayerCombatKillPacket(listener.player.getId(), deathMessage));
-            ILogoutRules.SKIPPED_DEATH_MESSAGES.remove(listener.player.getUUID());
+            LogoutRules.SKIPPED_DEATH_MESSAGES.remove(listener.player.getUUID());
         }
     }
 }

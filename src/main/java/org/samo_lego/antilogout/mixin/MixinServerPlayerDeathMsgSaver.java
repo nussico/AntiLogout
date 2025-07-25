@@ -1,6 +1,6 @@
 package org.samo_lego.antilogout.mixin;
 
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -18,7 +18,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.GameRules;
 
 @Mixin(ServerPlayer.class)
-public abstract class MServerPlayer_DeathMsgSaver {
+public abstract class MixinServerPlayerDeathMsgSaver {
 
     private static final int MAX_DEATH_MESSAGE_LENGTH = 256;
     @Unique
@@ -32,7 +32,7 @@ public abstract class MServerPlayer_DeathMsgSaver {
      */
     @Inject(method = "die", at = @At("RETURN"))
     private void onDie(DamageSource damageSource, CallbackInfo ci) {
-        if (((ILogoutRules) this).al_isFake()) {
+        if (((LogoutRules) this).al_isFake()) {
             ServerLevel serverLevel = (ServerLevel) this.level();
             boolean seeDeathMsgs = serverLevel.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
 
@@ -53,7 +53,7 @@ public abstract class MServerPlayer_DeathMsgSaver {
             }
 
             // Player won't see death message, we must save it for later (issue #1)
-            ILogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUUID(), deathMsg);
+            LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUUID(), deathMsg);
         }
     }
 }

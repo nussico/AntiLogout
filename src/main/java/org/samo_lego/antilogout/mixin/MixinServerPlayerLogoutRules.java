@@ -1,7 +1,7 @@
 package org.samo_lego.antilogout.mixin;
 
 import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.ILogoutRules;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 
 @Mixin(ServerPlayer.class)
-public abstract class MServerPlayer_LogoutRules implements ILogoutRules {
+public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
     @Shadow
     private boolean disconnected;
 

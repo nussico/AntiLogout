@@ -33,11 +33,6 @@ public class AntiLogoutCommand {
         }
         return CompletableFuture.completedFuture(builder.build());
     };
-    private static final SuggestionProvider<CommandSourceStack> BOOLEAN_SUGGESTIONS = (context, builder) -> {
-        builder.suggest("true");
-        builder.suggest("false");
-        return CompletableFuture.completedFuture(builder.build());
-    };
 
     // Maps user-friendly option names to config field accessors
     private static Object getConfigValueByOption(String option, org.samo_lego.antilogout.config.LogoutConfig config) {
