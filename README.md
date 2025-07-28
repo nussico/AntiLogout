@@ -8,17 +8,16 @@
 
 ## Overview
 
-**AntiLogout** is a server-side mod that prevents players from escaping combat by logging out. When a player logs out during combat, their "body" remains online for a configurable amount of time, making combat logging impossible. The mod also provides a flexible `/afk` command for safe AFK handling.
+**AntiLogout** is a server-side mod that prevents players from escaping combat by logging out. When a player logs out during combat, their "body" remains online for a configurable amount of time, making combat logging impossible. The mod also provides a flexible `/afk` command to safely go AFK for farming or other purposes.
 
 ---
 
 ## Features
 
 - Prevents combat logging: players who log out during combat remain in the world.
-- `/afk` command: lets players safely go AFK, with optional time limits.
+- `/afk` command: lets players logout with the account still online, with optional time limits.
 - Configurable messages and timeouts.
 - Permission-based command and feature access.
-- Simple, clean configuration file (`antilogout.toml`).
 
 ---
 
@@ -65,7 +64,7 @@ All options are in `config/antilogout.toml`.
 ## Permissions
 
 - `antilogout.bypass.combat` — Bypass combat tagging.
-- `antilogout.command.afk` — Use `/afk` (level 1).
+- `antilogout.command.afk` — Use `/afk` (level 0).
 - `antilogout.command.afk.time` — Set AFK time for yourself (level 0).
 - `antilogout.command.afk.players` — Set other players AFK (admin only, level 4).
 - `antilogout.command.antilogout` — Use `/antilogout` admin commands (level 4).
