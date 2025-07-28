@@ -1,17 +1,12 @@
 package org.samo_lego.antilogout.datatracker;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
-import org.jetbrains.annotations.ApiStatus;
-import org.samo_lego.antilogout.AntiLogout;
-
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.ApiStatus;
+import org.samo_lego.antilogout.AntiLogout;
+
+import java.util.*;
 
 public interface LogoutRules {
 

@@ -1,5 +1,10 @@
 package org.samo_lego.antilogout.mixin;
 
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import org.samo_lego.antilogout.AntiLogout;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.samo_lego.antilogout.event.EventHandler;
@@ -10,12 +15,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 
 /**
  * Unified mixin for ServerPlayer implementing LogoutRules.

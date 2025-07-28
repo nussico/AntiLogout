@@ -1,9 +1,9 @@
 package org.samo_lego.antilogout.config;
 
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 
 public class ConfigManager {
     private static final Path CONFIG_PATH = Paths.get("config", "antilogout.toml");

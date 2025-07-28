@@ -1,16 +1,15 @@
 package org.samo_lego.antilogout.command;
 
-import static net.minecraft.server.command.CommandManager.literal;
-
-import java.util.concurrent.CompletableFuture;
-
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
+
+import java.util.concurrent.CompletableFuture;
+
+import static net.minecraft.server.command.CommandManager.literal;
 
 public class AntiLogoutCommand {
     private static final String[] OPTIONS = {

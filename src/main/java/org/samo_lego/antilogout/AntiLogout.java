@@ -1,13 +1,5 @@
 package org.samo_lego.antilogout;
 
-import org.samo_lego.antilogout.command.AfkCommand;
-import org.samo_lego.antilogout.command.AntiLogoutCommand;
-import org.samo_lego.antilogout.config.ConfigManager;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
-import org.samo_lego.antilogout.event.EventHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -17,6 +9,13 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.samo_lego.antilogout.command.AfkCommand;
+import org.samo_lego.antilogout.command.AntiLogoutCommand;
+import org.samo_lego.antilogout.config.ConfigManager;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
+import org.samo_lego.antilogout.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AntiLogout implements DedicatedServerModInitializer {
     public static final String MOD_ID = "antilogout";

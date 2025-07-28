@@ -1,9 +1,5 @@
 package org.samo_lego.antilogout.event;
 
-import org.jetbrains.annotations.Nullable;
-import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
-
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.entity.Entity;
@@ -21,6 +17,9 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
+import org.samo_lego.antilogout.AntiLogout;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 /**
  * Takes care of events.
@@ -44,7 +43,7 @@ public class EventHandler {
     public static ActionResult onAttack(PlayerEntity attacker, World _level, Hand _interactionHand,
             Entity target, @Nullable EntityHitResult _entityHitResult) {
         if (target instanceof PlayerEntity) {
-            long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
+            long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000L);
 
             // Mark target
             if (target instanceof LogoutRules logoutTarget
@@ -85,9 +84,9 @@ public class EventHandler {
      * @param damageSource damage source
      */
     public static void onHurt(ServerPlayerEntity target, DamageSource damageSource) {
-        long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
-        if (target instanceof PlayerEntity) {
-            boolean trigger = false;
+        long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000L);
+        if (target != null) {
+            boolean trigger;
             if (AntiLogout.config.combatLog.playerHurtOnly) {
                 // Only player or player projectile
                 trigger = (damageSource.getAttacker() instanceof PlayerEntity) ||

@@ -1,13 +1,5 @@
 package org.samo_lego.antilogout.mixin;
 
-import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.DisconnectionInfo;
 import net.minecraft.server.MinecraftServer;
@@ -15,6 +7,13 @@ import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerCommonNetworkHandler;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.samo_lego.antilogout.AntiLogout;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class MixinServerGamePacketListenerImpl extends ServerCommonNetworkHandler {

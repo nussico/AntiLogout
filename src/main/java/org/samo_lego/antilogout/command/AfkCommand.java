@@ -1,22 +1,20 @@
 package org.samo_lego.antilogout.command;
 
-import static net.minecraft.server.command.CommandManager.literal;
-import static org.samo_lego.antilogout.AntiLogout.config;
-
-import java.util.Collections;
-
-import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
-
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
-
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.samo_lego.antilogout.AntiLogout;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
+
+import java.util.Collections;
+
+import static net.minecraft.server.command.CommandManager.literal;
+import static org.samo_lego.antilogout.AntiLogout.config;
 
 public class AfkCommand {
 

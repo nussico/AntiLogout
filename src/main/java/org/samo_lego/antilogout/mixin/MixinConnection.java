@@ -1,16 +1,15 @@
 package org.samo_lego.antilogout.mixin;
 
+import io.netty.channel.Channel;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.network.listener.PacketListener;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import io.netty.channel.Channel;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.listener.PacketListener;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 
 @Mixin(ClientConnection.class)
 public abstract class MixinConnection {
