@@ -9,9 +9,9 @@ import java.util.UUID;
 import org.jetbrains.annotations.ApiStatus;
 import org.samo_lego.antilogout.AntiLogout;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public interface LogoutRules {
 
@@ -19,9 +19,9 @@ public interface LogoutRules {
      * Set of players that have disconnected,
      * but are still present in the world.
      */
-    Set<ServerPlayer> DISCONNECTED_PLAYERS = new HashSet<>();
+    Set<ServerPlayerEntity> DISCONNECTED_PLAYERS = new HashSet<>();
 
-    Map<UUID, Component> SKIPPED_DEATH_MESSAGES = new HashMap<>();
+    Map<UUID, Text> SKIPPED_DEATH_MESSAGES = new HashMap<>();
 
     /**
      * Whether to allow disconnect for this player.
@@ -57,10 +57,10 @@ public interface LogoutRules {
         if (AntiLogout.config.combatLog.notifyOnCombat) {
             // Inform player
             long duration = (long) Math.ceil((systemTime - System.currentTimeMillis()) / 1000.0D);
-            ((ServerPlayer) this).displayClientMessage(this.al$getStartCombatMessage(duration), true);
+            ((ServerPlayerEntity) this).sendMessage(this.al$getStartCombatMessage(duration), true);
 
             this.al$delay(systemTime,
-                    () -> ((ServerPlayer) this).displayClientMessage(this.al$getEndCombatMessage(duration), true));
+                    () -> ((ServerPlayerEntity) this).sendMessage(this.al$getEndCombatMessage(duration), true));
         }
     }
 
@@ -81,17 +81,17 @@ public interface LogoutRules {
      * @return combat message
      */
     @ApiStatus.Internal
-    default Component al$getStartCombatMessage(long duration) {
-        return Component.literal("[AL] ").withStyle(ChatFormatting.DARK_RED).append(
-                Component.translatable(AntiLogout.config.combatLog.combatEnterMessage, duration)
-                        .withStyle(ChatFormatting.RED));
+    default Text al$getStartCombatMessage(long duration) {
+        return Text.literal("[AL] ").formatted(Formatting.DARK_RED).append(
+                Text.translatable(AntiLogout.config.combatLog.combatEnterMessage, duration)
+                        .formatted(Formatting.RED));
     }
 
     @ApiStatus.Internal
-    default Component al$getEndCombatMessage(long duration) {
-        return Component.literal("[AL] ").withStyle(ChatFormatting.DARK_GREEN).append(
-                Component.translatable(AntiLogout.config.combatLog.combatEndMessage, duration)
-                        .withStyle(ChatFormatting.GREEN));
+    default Text al$getEndCombatMessage(long duration) {
+        return Text.literal("[AL] ").formatted(Formatting.DARK_GREEN).append(
+                Text.translatable(AntiLogout.config.combatLog.combatEndMessage, duration)
+                        .formatted(Formatting.GREEN));
     }
 
     /**

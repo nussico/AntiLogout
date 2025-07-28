@@ -8,38 +8,38 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.network.Connection;
-import net.minecraft.network.DisconnectionDetails;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.network.DisconnectionInfo;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.server.network.ServerCommonPacketListenerImpl;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.server.network.ConnectedClientData;
+import net.minecraft.server.network.ServerCommonNetworkHandler;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
 
-@Mixin(ServerGamePacketListenerImpl.class)
-public abstract class MixinServerGamePacketListenerImpl extends ServerCommonPacketListenerImpl {
+@Mixin(ServerPlayNetworkHandler.class)
+public abstract class MixinServerGamePacketListenerImpl extends ServerCommonNetworkHandler {
     @Shadow
-    public ServerPlayer player;
+    public ServerPlayerEntity player;
 
-    public MixinServerGamePacketListenerImpl(MinecraftServer minecraftServer, Connection connection,
-            CommonListenerCookie commonListenerCookie) {
-        super(minecraftServer, connection, commonListenerCookie);
+    public MixinServerGamePacketListenerImpl(MinecraftServer minecraftServer, ClientConnection clientConnection,
+            ConnectedClientData connectedClientData) {
+        super(minecraftServer, clientConnection, connectedClientData);
     }
 
     @Shadow
-    public abstract ServerPlayer getPlayer();
+    public abstract ServerPlayerEntity getPlayer();
 
     /**
      * Hooks in the disconnect method, so that /afk works properly
      *
-     * @param disconnectionDetails
+     * @param disconnectionInfo
      * @param ci
      */
-    @Inject(method = "onDisconnect", at = @At("HEAD"), cancellable = true)
-    private void al$onDisconnect(DisconnectionDetails disconnectionDetails, CallbackInfo ci) {
+    @Inject(method = "onDisconnected", at = @At("HEAD"), cancellable = true)
+    private void al$onDisconnect(DisconnectionInfo disconnectionInfo, CallbackInfo ci) {
         // Generic disconnect is handled by MConnection#al_handleDisconnection
         if (!((LogoutRules) this.getPlayer()).al_allowDisconnect()
-                && disconnectionDetails.reason() == AntiLogout.AFK_MESSAGE) {
+                && disconnectionInfo.reason() == AntiLogout.AFK_MESSAGE) {
             ((LogoutRules) this.player).al_onRealDisconnect();
 
             // Disable disconnecting in this case

@@ -6,10 +6,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerConnectionListener;
+import net.minecraft.server.ServerNetworkIo;
+import net.minecraft.server.network.ServerPlayerEntity;
 
-@Mixin(ServerConnectionListener.class)
+@Mixin(ServerNetworkIo.class)
 public class MixinServerConnectionListener {
 
     /**
@@ -20,6 +20,6 @@ public class MixinServerConnectionListener {
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTickConnections(CallbackInfo ci) {
         // Tick "disconnected" players as well
-        LogoutRules.DISCONNECTED_PLAYERS.forEach(ServerPlayer::doTick);
+        LogoutRules.DISCONNECTED_PLAYERS.forEach(ServerPlayerEntity::playerTick);
     }
 }

@@ -6,17 +6,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.network.DisconnectionDetails;
-import net.minecraft.server.network.ServerCommonPacketListenerImpl;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.network.DisconnectionInfo;
+import net.minecraft.server.network.ServerCommonNetworkHandler;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 
-@Mixin(ServerCommonPacketListenerImpl.class)
+@Mixin(ServerCommonNetworkHandler.class)
 public class MixinServerCommonPacketListenerImpl {
-    @Inject(method = "disconnect(Lnet/minecraft/network/DisconnectionDetails;)V", at = @At("TAIL"))
-    private void al$disconnect(DisconnectionDetails disconnectionDetails, CallbackInfo ci) {
-        if (((Object) this) instanceof ServerGamePacketListenerImpl serverGamePacketListener) {
+    @Inject(method = "disconnect(Lnet/minecraft/network/DisconnectionInfo;)V", at = @At("TAIL"))
+    private void al$disconnect(DisconnectionInfo disconnectionInfo, CallbackInfo ci) {
+        if (((Object) this) instanceof ServerPlayNetworkHandler serverGamePacketListener) {
             if (((LogoutRules) serverGamePacketListener.player).al_isFake()) {
-                serverGamePacketListener.onDisconnect(disconnectionDetails);
+                serverGamePacketListener.onDisconnected(disconnectionInfo);
             }
         }
     }

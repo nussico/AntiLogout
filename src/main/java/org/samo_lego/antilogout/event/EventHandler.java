@@ -6,26 +6,26 @@ import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.network.DisconnectionDetails;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.network.DisconnectionInfo;
+import net.minecraft.network.packet.s2c.play.DeathMessageS2CPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.world.World;
 
 /**
  * Takes care of events.
- * We could use {@link ServerPlayer#onEnterCombat()}
- * and {@link ServerPlayer#onLeaveCombat()} but
+ * We could use {@link ServerPlayerEntity#enterCombat()}
+ * and {@link ServerPlayerEntity#endCombat()} but
  * since we want configurable combat timeout, we
  * have to use fabric events.
  */
@@ -39,11 +39,11 @@ public class EventHandler {
      * @param _interactionHand hand used to attack
      * @param target           targeted entity
      * @param _entityHitResult hit result
-     * @return {@link InteractionResult#PASS}
+     * @return {@link ActionResult#PASS}
      */
-    public static InteractionResult onAttack(Player attacker, Level _level, InteractionHand _interactionHand,
+    public static ActionResult onAttack(PlayerEntity attacker, World _level, Hand _interactionHand,
             Entity target, @Nullable EntityHitResult _entityHitResult) {
-        if (target instanceof Player) {
+        if (target instanceof PlayerEntity) {
             long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
 
             // Mark target
@@ -59,7 +59,7 @@ public class EventHandler {
                 logoutAttacker.al_setInCombatUntil(allowedDc);
             }
         }
-        return InteractionResult.PASS;
+        return ActionResult.PASS;
     }
 
     /**
@@ -71,7 +71,7 @@ public class EventHandler {
     public static void onDeath(LivingEntity deadEntity, DamageSource _damageSource) {
         if (deadEntity instanceof LogoutRules player && player.al_isFake()) {
             // Remove player from online players
-            ((ServerPlayer) player).connection.onDisconnect(new DisconnectionDetails(Component.empty()));
+            ((ServerPlayerEntity) player).networkHandler.onDisconnected(new DisconnectionInfo(Text.empty()));
         }
     }
 
@@ -84,14 +84,14 @@ public class EventHandler {
      * @param target       player who was hurt
      * @param damageSource damage source
      */
-    public static void onHurt(ServerPlayer target, DamageSource damageSource) {
+    public static void onHurt(ServerPlayerEntity target, DamageSource damageSource) {
         long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000);
-        if (target instanceof Player) {
+        if (target instanceof PlayerEntity) {
             boolean trigger = false;
             if (AntiLogout.config.combatLog.playerHurtOnly) {
                 // Only player or player projectile
-                trigger = (damageSource.getEntity() instanceof Player) ||
-                        (damageSource.getEntity() instanceof Projectile p && p.getOwner() instanceof Player);
+                trigger = (damageSource.getAttacker() instanceof PlayerEntity) ||
+                        (damageSource.getAttacker() instanceof ProjectileEntity p && p.getOwner() instanceof PlayerEntity);
             } else {
                 // Any damage triggers
                 trigger = true;
@@ -110,13 +110,13 @@ public class EventHandler {
      * @param _sender  packet sender
      * @param _server  minecraft server
      */
-    public static void onPlayerJoin(ServerGamePacketListenerImpl listener, PacketSender _sender,
+    public static void onPlayerJoin(ServerPlayNetworkHandler listener, PacketSender _sender,
             MinecraftServer _server) {
-        final Component deathMessage = LogoutRules.SKIPPED_DEATH_MESSAGES.get(listener.player.getUUID());
+        final Text deathMessage = LogoutRules.SKIPPED_DEATH_MESSAGES.get(listener.player.getUuid());
         if (deathMessage != null) {
-            listener.player.displayClientMessage(deathMessage, false);
-            listener.send(new ClientboundPlayerCombatKillPacket(listener.player.getId(), deathMessage));
-            LogoutRules.SKIPPED_DEATH_MESSAGES.remove(listener.player.getUUID());
+            listener.player.sendMessage(deathMessage, false);
+            listener.sendPacket(new DeathMessageS2CPacket(listener.player.getId(), deathMessage));
+            LogoutRules.SKIPPED_DEATH_MESSAGES.remove(listener.player.getUuid());
         }
     }
 }

@@ -2,58 +2,58 @@ package org.samo_lego.antilogout.mixin;
 
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.world.GameRules;
 
-@Mixin(ServerPlayer.class)
+@Mixin(ServerPlayerEntity.class)
 public abstract class MixinServerPlayerDeathMsgSaver {
 
+    @Unique
     private static final int MAX_DEATH_MESSAGE_LENGTH = 256;
     @Unique
-    private final ServerPlayer self = (ServerPlayer) (Object) this;
+    private final ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
 
-    @Shadow
-    public abstract net.minecraft.world.level.Level level();
+    @Unique
+    public abstract net.minecraft.world.World level();
 
     /**
      * Saves death message for later if player is fake.
      */
-    @Inject(method = "die", at = @At("RETURN"))
-    private void onDie(DamageSource damageSource, CallbackInfo ci) {
+    @Inject(method = "onDeath", at = @At("RETURN"))
+    private void onDeath(DamageSource damageSource, CallbackInfo ci) {
         if (((LogoutRules) this).al_isFake()) {
-            ServerLevel serverLevel = (ServerLevel) this.level();
-            boolean seeDeathMsgs = serverLevel.getGameRules().getBoolean(GameRules.RULE_SHOWDEATHMESSAGES);
+            ServerWorld serverLevel = (ServerWorld) this.level();
+            boolean seeDeathMsgs = serverLevel.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES);
 
-            Component deathMsg;
+            Text deathMsg;
             if (seeDeathMsgs) {
-                deathMsg = self.getCombatTracker().getDeathMessage();
+                deathMsg = self.getDamageTracker().getDeathMessage();
 
                 if (deathMsg.getString().length() > MAX_DEATH_MESSAGE_LENGTH) {
-                    String string = deathMsg.getString(MAX_DEATH_MESSAGE_LENGTH);
-                    var attackTooLongMsg = Component.translatable("death.attack.message_too_long",
-                            Component.literal(string).withStyle(ChatFormatting.YELLOW));
+                    String string = deathMsg.asTruncatedString(MAX_DEATH_MESSAGE_LENGTH);
+                    var attackTooLongMsg = Text.translatable("death.attack.message_too_long",
+                            Text.literal(string).formatted(Formatting.YELLOW));
 
-                    deathMsg = Component.translatable("death.attack.even_more_magic", self.getDisplayName())
-                            .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(attackTooLongMsg)));
+                    deathMsg = Text.translatable("death.attack.even_more_magic", self.getDisplayName())
+                            .styled(style -> style.withHoverEvent(new HoverEvent.ShowText(attackTooLongMsg)));
                 }
             } else {
-                deathMsg = CommonComponents.EMPTY;
+                deathMsg = ScreenTexts.EMPTY;
             }
 
             // Player won't see death message, we must save it for later (issue #1)
-            LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUUID(), deathMsg);
+            LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUuid(), deathMsg);
         }
     }
 }

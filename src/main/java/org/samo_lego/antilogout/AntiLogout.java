@@ -14,16 +14,16 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 public class AntiLogout implements DedicatedServerModInitializer {
     public static final String MOD_ID = "antilogout";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static ConfigManager.Config config;
-    public static final Component AFK_MESSAGE;
+    public static final Text AFK_MESSAGE;
 
     // Static reference to the current MinecraftServer instance
     public static MinecraftServer SERVER = null;
@@ -31,7 +31,7 @@ public class AntiLogout implements DedicatedServerModInitializer {
     static {
         ConfigManager.load();
         config = ConfigManager.config;
-        AFK_MESSAGE = Component.translatable(config.afk.afkMessage);
+        AFK_MESSAGE = Text.translatable(config.afk.afkMessage);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class AntiLogout implements DedicatedServerModInitializer {
     public static void onConfigReload() {
         if (SERVER == null) return;
         if (config.general.debug) LOGGER.info("[DEBUG] Reloading config and updating player states...");
-        for (ServerPlayer player : SERVER.getPlayerList().getPlayers()) {
+        for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
             if (player instanceof LogoutRules rules) {
                 long now = System.currentTimeMillis();
                 if (!rules.al_allowDisconnect()) {
