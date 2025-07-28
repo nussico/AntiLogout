@@ -21,7 +21,9 @@ public abstract class MixinConnection {
     public abstract PacketListener getPacketListener();
 
     /**
-     * This method gets called when PLAYER wants to disconnect
+     * Injects into the player disconnect handler to manage combat log and AFK disconnects.
+     * Suppresses combat log message if disconnect is AFK-triggered.
+     * @param ci callback info
      */
     @Inject(method = "handleDisconnection", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/listener/PacketListener;onDisconnected(Lnet/minecraft/network/DisconnectionInfo;)V"), cancellable = true)
     private void al_handleDisconnection(CallbackInfo ci) {

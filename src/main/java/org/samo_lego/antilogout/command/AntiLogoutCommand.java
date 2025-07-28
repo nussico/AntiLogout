@@ -103,9 +103,10 @@ public class AntiLogoutCommand {
     }
 
     /**
-     * Utility method to format the status message for the config.
+     * Formats the status message for the current AntiLogout config.
+     * Lists all relevant config values in a readable format.
      *
-     * @param config LogoutConfig
+     * @param config the current AntiLogout config
      * @return formatted status string
      */
     private static String formatStatus(org.samo_lego.antilogout.config.ConfigManager.Config config) {
@@ -123,15 +124,17 @@ public class AntiLogoutCommand {
     }
 
     /**
-     * Registers /antilogout command with improved feedback and help.
-     * Usage: /antilogout help
-     *        /antilogout reload
-     *        /antilogout status
-     *        /antilogout get <option>
-     *        /antilogout set <option> <value>
+     * Registers the /antilogout command and all its subcommands.
+     *
+     * Usage:
+     *   /antilogout help - Show usage info.
+     *   /antilogout reload - Reloads the config file.
+     *   /antilogout status - Shows current config values.
+     *   /antilogout get <option> - Gets a config value.
+     *   /antilogout set <option> <value> - Sets a config value.
      * Alias: /al
      *
-     * @param dispatcher command dispatcher
+     * @param dispatcher the command dispatcher
      */
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(

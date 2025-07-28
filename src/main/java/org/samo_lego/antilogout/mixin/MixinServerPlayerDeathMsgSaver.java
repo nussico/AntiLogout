@@ -27,7 +27,10 @@ public abstract class MixinServerPlayerDeathMsgSaver {
     public abstract net.minecraft.world.World level();
 
     /**
-     * Saves death message for later if player is fake.
+     * Injects into the player death handler to save death messages for fake/disconnected players.
+     * Stores the message in SKIPPED_DEATH_MESSAGES for later display.
+     * @param damageSource the source of damage
+     * @param ci callback info
      */
     @Inject(method = "onDeath", at = @At("RETURN"))
     private void onDeath(DamageSource damageSource, CallbackInfo ci) {
@@ -50,8 +53,6 @@ public abstract class MixinServerPlayerDeathMsgSaver {
             } else {
                 deathMsg = ScreenTexts.EMPTY;
             }
-
-            // Player won't see death message, we must save it for later (issue #1)
             LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUuid(), deathMsg);
         }
     }

@@ -15,44 +15,40 @@ import net.minecraft.util.Formatting;
 
 public interface LogoutRules {
     /**
-     * Marks this disconnect as AFK-triggered.
+     * Sets whether this disconnect was triggered by the AFK command.
+     * @param afk true if disconnect is AFK-triggered, false otherwise
      */
     void al_setAfkDisconnect(boolean afk);
 
     /**
-     * Returns true if the disconnect was triggered by AFK command.
+     * Checks if the disconnect was triggered by the AFK command.
+     * @return true if AFK disconnect, false otherwise
      */
     boolean al_isAfkDisconnect();
 
     /**
-     * Set of players that have disconnected,
-     * but are still present in the world.
+     * Set of players that have disconnected but are still present in the world as dummies.
      */
     Set<ServerPlayerEntity> DISCONNECTED_PLAYERS = new HashSet<>();
 
     Map<UUID, Text> SKIPPED_DEATH_MESSAGES = new HashMap<>();
 
     /**
-     * Whether to allow disconnect for this player.
-     *
+     * Checks whether the player is currently allowed to disconnect without leaving a dummy.
      * @return true if allowed, false otherwise
      */
     boolean al_allowDisconnect();
 
     /**
-     * Sets the time when the player can disconnect.
-     *
-     * @param systemTime time in milliseconds at which the player can disconnect
-     *                   without staying in the world.
+     * Sets the system time (in ms) when the player is allowed to disconnect without leaving a dummy.
+     * @param systemTime time in milliseconds when disconnect is allowed
      */
     void al_setAllowDisconnectAt(long systemTime);
 
     /**
-     * Sets whether the player can disconnect.
-     *
-     * @param allow true if disconnect is allowed, false otherwise
+     * Sets whether the player can disconnect immediately.
+     * @param allow true to allow immediate disconnect, false otherwise
      */
-
     void al_setAllowDisconnect(boolean allow);
 
     /**
@@ -64,7 +60,7 @@ public interface LogoutRules {
         this.al_setAllowDisconnectAt(systemTime);
 
         if (AntiLogout.config.combatLog.notifyOnCombat) {
-            // Inform player
+            // Notify player about entering combat
             long duration = (long) Math.ceil((systemTime - System.currentTimeMillis()) / 1000.0D);
             ((ServerPlayerEntity) this).sendMessage(this.al$getStartCombatMessage(duration), true);
 
@@ -74,20 +70,17 @@ public interface LogoutRules {
     }
 
     /**
-     * Schedules a task execution after the specified delay.
-     * Only one can be scheduled at a time.
-     * (Scheduling new task will cancel the previous one)
-     *
-     * @param at   system time at which the task should be executed
-     * @param task task to execute
+     * Schedules a task to be executed after the specified system time (in ms).
+     * Only one task can be scheduled at a time; scheduling a new task cancels the previous one.
+     * @param at system time in ms when the task should be executed
+     * @param task the task to execute
      */
     void al$delay(long at, Runnable task);
 
     /**
-     * Gets the combat message.
-     *
+     * Returns the combat start message for the player.
      * @param duration duration of combat state in seconds
-     * @return combat message
+     * @return the combat start message
      */
     @ApiStatus.Internal
     default Text al$getStartCombatMessage(long duration) {
@@ -96,6 +89,11 @@ public interface LogoutRules {
                         .formatted(Formatting.RED));
     }
 
+    /**
+     * Returns the combat end message for the player.
+     * @param duration duration of combat state in seconds
+     * @return the combat end message
+     */
     @ApiStatus.Internal
     default Text al$getEndCombatMessage(long duration) {
         return Text.literal("[AL] ").formatted(Formatting.DARK_GREEN).append(
@@ -104,20 +102,20 @@ public interface LogoutRules {
     }
 
     /**
-     * Whether the player is fake (present in the world, but not connected).
-     *
+     * Checks whether the player is a fake/disconnected entity (present in the world, but not connected).
      * @return true if fake, false otherwise
      */
     boolean al_isFake();
 
     /**
-     * Called when the player disconnects.
+     * Called when the player disconnects for real (not a soft/fake disconnect).
      */
     void al_onRealDisconnect();
 
     /**
      * Gets the current system time (ms) at which the player is allowed to disconnect.
      * Used for updating timers on config reload.
+     * @return system time in ms when disconnect is allowed
      */
     long al_getAllowDisconnectTime();
 }

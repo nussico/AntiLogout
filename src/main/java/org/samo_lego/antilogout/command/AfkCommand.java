@@ -21,11 +21,11 @@ import net.minecraft.text.Text;
 public class AfkCommand {
 
     /**
-     * Utility method to check if a source has the required permission.
+     * Checks if a command source has the required permission and level.
      *
-     * @param source CommandSourceStack
-     * @param permission Permission string
-     * @param level Required permission level
+     * @param source     the command source
+     * @param permission the permission string
+     * @param level      the required permission level
      * @return true if allowed, false otherwise
      */
     private static boolean hasPermission(ServerCommandSource source, String permission, int level) {
@@ -33,13 +33,15 @@ public class AfkCommand {
     }
 
     /**
-     * Registers /afk command with improved feedback and help.
-     * Usage: /afk := puts executor afk for max time.
-     *        /afk players [targets] [time] := puts specified players afk for specified time.
-     *        /afk time [time] := puts executor afk for specified time.
-     *        /afk help := shows usage info.
+     * Registers the /afk command and all its subcommands.
      *
-     * @param dispatcher command dispatcher
+     * Usage:
+     *   /afk - Set yourself AFK for max time.
+     *   /afk time <seconds> - Set yourself AFK for a specific time.
+     *   /afk players <targets> [time <seconds>] - Set other players AFK for max or specific time.
+     *   /afk help - Show usage info.
+     *
+     * @param dispatcher the command dispatcher
      */
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(literal("afk")
@@ -71,17 +73,23 @@ public class AfkCommand {
         );
     }
 
-    // Simple cooldown map for self-AFK to prevent spamming
-    private static final java.util.Map<java.util.UUID, Long> afkCooldowns = new java.util.HashMap<>();
+    /**
+     * Simple cooldown map for self-AFK to prevent command spamming.
+     */
+     private static final java.util.Map<java.util.UUID, Long> afkCooldowns = new java.util.HashMap<>();
+    
+     /**
+     * Cooldown time in milliseconds for self-AFK command.
+     */
     private static final long AFK_COOLDOWN_MS = 5000; // 5 seconds
 
     /**
-     * Attempts to put the specified players in AFK mode.
-     * Provides detailed feedback for each player.
+     * Attempts to put the specified players in AFK mode, with cooldown and combat checks.
+     * Provides detailed feedback for each player and broadcasts AFK status.
      *
-     * @param source  command source (for feedback)
-     * @param players players to afk
-     * @param timeLimit time in seconds
+     * @param source    the command source (for feedback)
+     * @param players   the players to set AFK
+     * @param timeLimit the AFK time in seconds (-1 for unlimited)
      * @return 1 if at least one player was set AFK, 0 otherwise
      */
     private static int afkPlayers(ServerCommandSource source, Iterable<ServerPlayerEntity> players, double timeLimit) {

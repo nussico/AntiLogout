@@ -12,11 +12,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinServerConnectionListener {
 
     /**
-     * Ticks all the players that are in {@link LogoutRules#DISCONNECTED_PLAYERS}
+     * Injects into the server network tick to tick all players in {@link LogoutRules#DISCONNECTED_PLAYERS}.
+     * Ensures dummies/fake players are updated each tick.
+     * @param ci callback info
      */
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTickConnections(CallbackInfo ci) {
-        // Tick "disconnected" players as well
+        // Tick all disconnected/dummy players as well
         LogoutRules.DISCONNECTED_PLAYERS.forEach(ServerPlayerEntity::playerTick);
     }
 }

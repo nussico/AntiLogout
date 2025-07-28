@@ -29,7 +29,10 @@ public abstract class MixinServerGamePacketListenerImpl extends ServerCommonNetw
     public abstract ServerPlayerEntity getPlayer();
 
     /**
-     * Hooks in the disconnect method, so that /afk works properly
+     * Injects into the disconnect method to ensure /afk disconnects do not trigger combat log messages or dummies.
+     * Cancels disconnect if AFK, otherwise handles as normal.
+     * @param disconnectionInfo the disconnection info
+     * @param ci callback info
      */
     @Inject(method = "onDisconnected", at = @At("HEAD"), cancellable = true)
     private void al$onDisconnect(DisconnectionInfo disconnectionInfo, CallbackInfo ci) {

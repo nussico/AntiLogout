@@ -22,18 +22,29 @@ public class AntiLogout implements DedicatedServerModInitializer {
     public static ConfigManager.Config config;
     public static final Text AFK_MESSAGE;
 
-    // Static reference to the current MinecraftServer instance
+    /**
+     * Static reference to the current MinecraftServer instance.
+     * Used for accessing the server from anywhere in the mod.
+     */
     public static MinecraftServer SERVER = null;
 
+    /**
+     * Loads the configuration and initializes the AFK message.
+     * This static block ensures config is loaded before the mod is initialized.
+     */
     static {
         ConfigManager.load();
         config = ConfigManager.config;
         AFK_MESSAGE = Text.translatable(config.afk.afkMessage);
     }
 
+    /**
+     * Initializes the AntiLogout mod on the dedicated server.
+     * Registers all event listeners and commands, and manages server lifecycle hooks.
+     */
     @Override
     public void onInitializeServer() {
-        // Register server lifecycle events to track the server instance
+        // Register server lifecycle events to track the server instance and cleanup on stop
         ServerLifecycleEvents.SERVER_STARTED.register(server -> SERVER = server);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             SERVER = null;
@@ -41,10 +52,12 @@ public class AntiLogout implements DedicatedServerModInitializer {
             org.samo_lego.antilogout.datatracker.LogoutRules.DISCONNECTED_PLAYERS.clear();
         });
 
+        // Register event listeners for combat, death, and player join
         AttackEntityCallback.EVENT.register(EventHandler::onAttack);
         ServerLivingEntityEvents.AFTER_DEATH.register(EventHandler::onDeath);
         ServerPlayConnectionEvents.JOIN.register(EventHandler::onPlayerJoin);
 
+        // Register commands for AFK and AntiLogout
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             AfkCommand.register(dispatcher);
             AntiLogoutCommand.register(dispatcher);

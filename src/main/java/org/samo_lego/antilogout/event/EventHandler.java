@@ -22,23 +22,23 @@ import org.samo_lego.antilogout.AntiLogout;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 
 /**
- * Takes care of events.
- * We could use {@link ServerPlayerEntity#enterCombat()}
- * and {@link ServerPlayerEntity#endCombat()} but
- * since we want configurable combat timeout, we
- * have to use fabric events.
+ * Handles all AntiLogout-related events for combat, AFK, and player state.
+ * Uses Fabric events to allow configurable combat timeout and custom logic.
+ * We do not use {@link ServerPlayerEntity#enterCombat()} or {@link ServerPlayerEntity#endCombat()} directly
+ * because we require more control and configuration than vanilla provides.
  */
 public class EventHandler {
 
     /**
-     * Marks attacker and target as "in combat state".
+     * Marks both the attacker and the target as "in combat state" if they are players.
+     * This is triggered on a player attack event and sets the combat timeout for both parties.
      *
-     * @param attacker         player who attacked
-     * @param _level           world
-     * @param _interactionHand hand used to attack
-     * @param target           targeted entity
-     * @param _entityHitResult hit result
-     * @return {@link ActionResult#PASS}
+     * @param attacker         the player who attacked
+     * @param _level           the world
+     * @param _interactionHand the hand used to attack
+     * @param target           the targeted entity
+     * @param _entityHitResult the hit result
+     * @return {@link ActionResult#PASS} to allow normal event flow
      */
     public static ActionResult onAttack(PlayerEntity attacker, World _level, Hand _interactionHand,
             Entity target, @Nullable EntityHitResult _entityHitResult) {
@@ -62,10 +62,11 @@ public class EventHandler {
     }
 
     /**
-     * Disconnects afk player on death.
+     * Disconnects a fake (AFK/dummy) player on death.
+     * Ensures that fake players are properly removed from the world when they die.
      *
-     * @param deadEntity    entity that died
-     * @param _damageSource damage source of death
+     * @param deadEntity    the entity that died
+     * @param _damageSource the damage source of death
      */
     public static void onDeath(LivingEntity deadEntity, DamageSource _damageSource) {
         if (deadEntity instanceof LogoutRules player && player.al_isFake()) {
@@ -75,13 +76,11 @@ public class EventHandler {
     }
 
     /**
-     * Marks player as "in combat state" if
-     * enabled for that damage source.
-     * If damage source is a projectile, shot by
-     * a player, then that player is also marked.
+     * Marks a player as "in combat state" if the damage source is allowed by config.
+     * If the damage source is a projectile shot by a player, the shooter is also marked.
      *
-     * @param target       player who was hurt
-     * @param damageSource damage source
+     * @param target       the player who was hurt
+     * @param damageSource the damage source
      */
     public static void onHurt(ServerPlayerEntity target, DamageSource damageSource) {
         long allowedDc = System.currentTimeMillis() + Math.round(AntiLogout.config.combatLog.combatTimeout * 1000L);
@@ -102,12 +101,12 @@ public class EventHandler {
     }
 
     /**
-     * Sends death message to player if they died while disconnected,
-     * but still present in the world.
+     * Sends a stored death message to a player if they died while disconnected but are still present in the world.
+     * This ensures the player receives their death message upon rejoining.
      *
-     * @param listener packet listener
-     * @param _sender  packet sender
-     * @param _server  minecraft server
+     * @param listener the packet listener for the player
+     * @param _sender  the packet sender
+     * @param _server  the Minecraft server
      */
     public static void onPlayerJoin(ServerPlayNetworkHandler listener, PacketSender _sender,
             MinecraftServer _server) {
