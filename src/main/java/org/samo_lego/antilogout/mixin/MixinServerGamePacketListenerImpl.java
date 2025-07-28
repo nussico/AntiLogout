@@ -30,18 +30,21 @@ public abstract class MixinServerGamePacketListenerImpl extends ServerCommonNetw
 
     /**
      * Hooks in the disconnect method, so that /afk works properly
-     *
-     * @param disconnectionInfo
-     * @param ci
      */
     @Inject(method = "onDisconnected", at = @At("HEAD"), cancellable = true)
     private void al$onDisconnect(DisconnectionInfo disconnectionInfo, CallbackInfo ci) {
         // Generic disconnect is handled by MConnection#al_handleDisconnection
-        if (!((LogoutRules) this.getPlayer()).al_allowDisconnect()
+        LogoutRules rules = (LogoutRules) this.getPlayer();
+        if (!rules.al_allowDisconnect()
                 && disconnectionInfo.reason() == AntiLogout.AFK_MESSAGE) {
+            // If this is an AFK disconnect, do not trigger combat log message
+            if (rules.al_isAfkDisconnect()) {
+                // Reset flag for future disconnects
+                rules.al_setAfkDisconnect(false);
+                ci.cancel();
+                return;
+            }
             ((LogoutRules) this.player).al_onRealDisconnect();
-
-            // Disable disconnecting in this case
             ci.cancel();
         }
     }

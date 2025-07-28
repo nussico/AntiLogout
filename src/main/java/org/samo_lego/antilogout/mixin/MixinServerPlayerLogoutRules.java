@@ -36,6 +36,17 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
     private Runnable delayedTask;
     @Unique
     private long taskTime;
+    @Unique
+    private boolean afkDisconnect = false;
+    @Override
+    public void al_setAfkDisconnect(boolean afk) {
+        this.afkDisconnect = afk;
+    }
+
+    @Override
+    public boolean al_isAfkDisconnect() {
+        return this.afkDisconnect;
+    }
 
     // Determines if the player is allowed to disconnect
     @Override
@@ -67,9 +78,14 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
     @Override
     public void al_onRealDisconnect() {
         this.disconnected = true;
-        if (!this.al_allowDisconnect()) {
+        // If this is an AFK disconnect, do not create dummy or log combat/AFK disconnect
+        if (!this.al_allowDisconnect() && !this.al_isAfkDisconnect()) {
             DISCONNECTED_PLAYERS.add((ServerPlayerEntity) (Object) this);
             if (AntiLogout.config.general.debug) AntiLogout.LOGGER.info("[DISCONNECT] {} disconnected while not allowed (combat/AFK).", ((ServerPlayerEntity)(Object)this).getName().getString());
+        }
+        // Always reset AFK flag after disconnect
+        if (this.al_isAfkDisconnect()) {
+            this.al_setAfkDisconnect(false);
         }
     }
 

@@ -7,12 +7,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.samo_lego.antilogout.command.AfkCommand;
 import org.samo_lego.antilogout.command.AntiLogoutCommand;
 import org.samo_lego.antilogout.config.ConfigManager;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.samo_lego.antilogout.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,29 +51,5 @@ public class AntiLogout implements DedicatedServerModInitializer {
         });
 
         LOGGER.info("AntiLogout initialized.");
-    }
-
-    /**
-     * Called after config reload to update all online players' state
-     * to reflect new config values (e.g., combat/AFK timers, messages).
-     */
-    public static void onConfigReload() {
-        if (SERVER == null) return;
-        if (config.general.debug) LOGGER.info("[DEBUG] Reloading config and updating player states...");
-        for (ServerPlayerEntity player : SERVER.getPlayerManager().getPlayerList()) {
-            if (player instanceof LogoutRules rules) {
-                long now = System.currentTimeMillis();
-                if (!rules.al_allowDisconnect()) {
-                    long newCombatTimeout = (long) (config.combatLog.combatTimeout * 1000);
-                    long remaining = rules.al_getAllowDisconnectTime() - now;
-                    if (remaining < newCombatTimeout) {
-                        rules.al_setAllowDisconnectAt(now + newCombatTimeout);
-                        if (config.general.debug) LOGGER.info("[DEBUG] Extended combat/AFK timer for {}.", player.getName().getString());
-                    }
-                }
-            }
-        }
-        LOGGER.info("All online player states updated to reflect new config values.");
-        if (config.general.debug) LOGGER.info("[DEBUG] Config reload complete.");
     }
 }

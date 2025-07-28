@@ -1,14 +1,28 @@
 package org.samo_lego.antilogout.datatracker;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.jetbrains.annotations.ApiStatus;
 import org.samo_lego.antilogout.AntiLogout;
 
-import java.util.*;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 public interface LogoutRules {
+    /**
+     * Marks this disconnect as AFK-triggered.
+     */
+    void al_setAfkDisconnect(boolean afk);
+
+    /**
+     * Returns true if the disconnect was triggered by AFK command.
+     */
+    boolean al_isAfkDisconnect();
 
     /**
      * Set of players that have disconnected,

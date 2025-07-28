@@ -1,20 +1,22 @@
 package org.samo_lego.antilogout.command;
 
+import java.util.Collections;
+import java.util.Objects;
+
+import org.samo_lego.antilogout.AntiLogout;
+import static org.samo_lego.antilogout.AntiLogout.config;
+import org.samo_lego.antilogout.datatracker.LogoutRules;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
+
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
+import static net.minecraft.server.command.CommandManager.literal;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import org.samo_lego.antilogout.AntiLogout;
-import org.samo_lego.antilogout.datatracker.LogoutRules;
-
-import java.util.Collections;
-
-import static net.minecraft.server.command.CommandManager.literal;
-import static org.samo_lego.antilogout.AntiLogout.config;
 
 public class AfkCommand {
 
@@ -44,9 +46,10 @@ public class AfkCommand {
             .requires(src -> hasPermission(src, "antilogout.command.afk", config.afk.permissionLevel))
             .then(literal("help")
                 .executes(ctx -> {
-                    ctx.getSource().sendFeedback(() -> Text.literal("/afk - Set yourself AFK for max time.\n" +
-                        "/afk time <seconds> - Set yourself AFK for a specific time.\n" +
-                        "/afk players <targets> [time <seconds>] - Set other players AFK for max or specific time."), false);
+                    ctx.getSource().sendFeedback(() -> Text.literal("""
+                            /afk - Set yourself AFK for max time.
+                            /afk time <seconds> - Set yourself AFK for a specific time.
+                            /afk players <targets> [time <seconds>] - Set other players AFK for max or specific time."""), false);
                     return 1;
                 })
             )
@@ -83,10 +86,10 @@ public class AfkCommand {
      */
     private static int afkPlayers(ServerCommandSource source, Iterable<ServerPlayerEntity> players, double timeLimit) {
         int affected = 0;
-        boolean isSelf = false;
+        boolean isSelf;
         for (var player : players) {
             LogoutRules rules = (LogoutRules) player;
-            isSelf = source.isExecutedByPlayer() && source.getPlayer().equals(player);
+            isSelf = source.isExecutedByPlayer() && Objects.equals(source.getPlayer(), player);
             // Cooldown for self-AFK
             if (isSelf) {
                 long now = System.currentTimeMillis();
@@ -115,12 +118,13 @@ public class AfkCommand {
             if (timeLimit == -1) {
                 rules.al_setAllowDisconnectAt(-1); // Unlimited AFK
             } else {
-                rules.al_setAllowDisconnectAt(System.currentTimeMillis() + (long) (timeLimit * 1000));
+                rules.al_setAllowDisconnectAt(System.currentTimeMillis() + (long) (timeLimit * 1000L));
             }
+            rules.al_setAfkDisconnect(true);
             player.networkHandler.disconnect(AntiLogout.AFK_MESSAGE);
             source.sendFeedback(() -> Text.literal("Set " + player.getName().getString() + " AFK for " + (timeLimit == -1 ? "unlimited" : (int) timeLimit) + " seconds."), false);
             if (config.general.debug) AntiLogout.LOGGER.info("[AFK] {} set {} AFK for {} seconds. (combat state: ALLOWED)", source.getName(), player.getName().getString(), (timeLimit == -1 ? "unlimited" : (int) timeLimit));
-            player.getServer().getPlayerManager().broadcast(
+            Objects.requireNonNull(player.getServer()).getPlayerManager().broadcast(
                 Text.literal(config.afk.afkBroadcastMessage.replace("{player}", player.getName().getString())), false);
             affected++;
         }

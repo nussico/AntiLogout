@@ -35,70 +35,68 @@ public class AntiLogoutCommand {
 
     // Maps user-friendly option names to config field accessors
     private static Object getConfigValueByOption(String option, org.samo_lego.antilogout.config.ConfigManager.Config config) {
-        switch (option) {
-            case "disableAllLogouts":
-                return config.general.disableAllLogouts;
-            case "combatTimeout":
-                return config.combatLog.combatTimeout;
-            case "notifyOnCombat":
-                return config.combatLog.notifyOnCombat;
-            case "combatEnterMessage":
-                return config.combatLog.combatEnterMessage;
-            case "combatEndMessage":
-                return config.combatLog.combatEndMessage;
-            case "playerHurtOnly":
-                return config.combatLog.playerHurtOnly;
-            case "bypassPermissionLevel":
-                return config.combatLog.bypassPermissionLevel;
-            case "afkMessage":
-                return config.afk.afkMessage;
-            case "permissionLevel":
-                return config.afk.permissionLevel;
-            case "maxAfkTime":
-                return config.afk.maxAfkTime;
-            default:
-                return null;
-        }
+        return switch (option) {
+            case "disableAllLogouts" -> config.general.disableAllLogouts;
+            case "combatTimeout" -> config.combatLog.combatTimeout;
+            case "notifyOnCombat" -> config.combatLog.notifyOnCombat;
+            case "combatEnterMessage" -> config.combatLog.combatEnterMessage;
+            case "combatEndMessage" -> config.combatLog.combatEndMessage;
+            case "playerHurtOnly" -> config.combatLog.playerHurtOnly;
+            case "bypassPermissionLevel" -> config.combatLog.bypassPermissionLevel;
+            case "afkMessage" -> config.afk.afkMessage;
+            case "permissionLevel" -> config.afk.permissionLevel;
+            case "maxAfkTime" -> config.afk.maxAfkTime;
+            default -> null;
+        };
     }
 
     // Sets config value by user-friendly option name
     private static boolean setConfigValueByOption(String option, String value,
             org.samo_lego.antilogout.config.ConfigManager.Config config) {
         try {
-            switch (option) {
-                case "disableAllLogouts":
+            return switch (option) {
+                case "disableAllLogouts" -> {
                     config.general.disableAllLogouts = Boolean.parseBoolean(value);
-                    return true;
-                case "combatTimeout":
+                    yield true;
+                }
+                case "combatTimeout" -> {
                     config.combatLog.combatTimeout = Integer.parseInt(value);
-                    return true;
-                case "notifyOnCombat":
+                    yield true;
+                }
+                case "notifyOnCombat" -> {
                     config.combatLog.notifyOnCombat = Boolean.parseBoolean(value);
-                    return true;
-                case "combatEnterMessage":
+                    yield true;
+                }
+                case "combatEnterMessage" -> {
                     config.combatLog.combatEnterMessage = value;
-                    return true;
-                case "combatEndMessage":
+                    yield true;
+                }
+                case "combatEndMessage" -> {
                     config.combatLog.combatEndMessage = value;
-                    return true;
-                case "playerHurtOnly":
+                    yield true;
+                }
+                case "playerHurtOnly" -> {
                     config.combatLog.playerHurtOnly = Boolean.parseBoolean(value);
-                    return true;
-                case "bypassPermissionLevel":
+                    yield true;
+                }
+                case "bypassPermissionLevel" -> {
                     config.combatLog.bypassPermissionLevel = Integer.parseInt(value);
-                    return true;
-                case "afkMessage":
+                    yield true;
+                }
+                case "afkMessage" -> {
                     config.afk.afkMessage = value;
-                    return true;
-                case "permissionLevel":
+                    yield true;
+                }
+                case "permissionLevel" -> {
                     config.afk.permissionLevel = Integer.parseInt(value);
-                    return true;
-                case "maxAfkTime":
+                    yield true;
+                }
+                case "maxAfkTime" -> {
                     config.afk.maxAfkTime = Double.parseDouble(value);
-                    return true;
-                default:
-                    return false;
-            }
+                    yield true;
+                }
+                default -> false;
+            };
         } catch (Exception e) {
             return false;
         }
@@ -142,11 +140,12 @@ public class AntiLogoutCommand {
                 .then(CommandManager.literal("help")
                     .executes(ctx -> {
                         ctx.getSource().sendFeedback(() -> Text.literal(
-                            "/antilogout reload - Reloads the config file.\n" +
-                            "/antilogout status - Shows current config values.\n" +
-                            "/antilogout get <option> - Gets a config value.\n" +
-                            "/antilogout set <option> <value> - Sets a config value.\n" +
-                            "Options: disableAllLogouts, combatTimeout, notifyOnCombat, combatEnterMessage, combatEndMessage, playerHurtOnly, bypassPermissionLevel, afkMessage, permissionLevel, maxAfkTime"
+                                """
+                                        /antilogout reload - Reloads the config file.
+                                        /antilogout status - Shows current config values.
+                                        /antilogout get <option> - Gets a config value.
+                                        /antilogout set <option> <value> - Sets a config value.
+                                        Options: disableAllLogouts, combatTimeout, notifyOnCombat, combatEnterMessage, combatEndMessage, playerHurtOnly, bypassPermissionLevel, afkMessage, permissionLevel, maxAfkTime"""
                         ), false);
                         return 1;
                     })

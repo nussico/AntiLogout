@@ -1,13 +1,24 @@
 package org.samo_lego.antilogout.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import org.samo_lego.antilogout.AntiLogout;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class ConfigManager {
     private static final Path CONFIG_PATH = Paths.get("config", "antilogout.toml");
     public static Config config = new Config();
+
+    static {
+        try {
+            Files.createDirectories(CONFIG_PATH.getParent());
+        } catch (IOException e) {
+            AntiLogout.LOGGER.info("Could not create config directory!");
+        }
+    }
 
     public static void load() {
         CommentedFileConfig configData = CommentedFileConfig.builder(CONFIG_PATH).autosave().build();

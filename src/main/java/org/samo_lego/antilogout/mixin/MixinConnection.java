@@ -22,24 +22,25 @@ public abstract class MixinConnection {
 
     /**
      * This method gets called when PLAYER wants to disconnect
-     *
-     * @param ci
      */
     @Inject(method = "handleDisconnection", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/listener/PacketListener;onDisconnected(Lnet/minecraft/network/DisconnectionInfo;)V"), cancellable = true)
     private void al_handleDisconnection(CallbackInfo ci) {
         if (this.getPacketListener() instanceof ServerPlayNetworkHandler listener) {
-            if (!((LogoutRules) listener.getPlayer()).al_allowDisconnect()) {
-                // Broadcast combat logout message
-                var player = listener.getPlayer();
-                var server = player.getServer();
-                if (server != null) {
-                    server.getPlayerManager().broadcast(
-                            net.minecraft.text.Text
-                                    .literal(player.getName().getString() + " " + org.samo_lego.antilogout.AntiLogout.config.combatLog.combatDisconnectMessage),
-                            false);
+            LogoutRules rules = (LogoutRules) listener.getPlayer();
+            if (!rules.al_allowDisconnect()) {
+                // Suppress combat log message if AFK disconnect
+                if (!rules.al_isAfkDisconnect()) {
+                    var player = listener.getPlayer();
+                    var server = player.getServer();
+                    if (server != null) {
+                        server.getPlayerManager().broadcast(
+                                net.minecraft.text.Text
+                                        .literal(player.getName().getString() + " " + org.samo_lego.antilogout.AntiLogout.config.combatLog.combatDisconnectMessage),
+                                false);
+                    }
                 }
                 this.channel.close();
-                ((LogoutRules) listener.getPlayer()).al_onRealDisconnect();
+                rules.al_onRealDisconnect();
                 ci.cancel();
             }
         }

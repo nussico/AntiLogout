@@ -13,8 +13,6 @@ public class MixinServerConnectionListener {
 
     /**
      * Ticks all the players that are in {@link LogoutRules#DISCONNECTED_PLAYERS}
-     *
-     * @param ci
      */
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTickConnections(CallbackInfo ci) {
