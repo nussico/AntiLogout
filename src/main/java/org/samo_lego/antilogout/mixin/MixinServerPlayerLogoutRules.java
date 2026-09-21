@@ -1,10 +1,10 @@
 package org.samo_lego.antilogout.mixin;
 
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
 import org.samo_lego.antilogout.AntiLogout;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.samo_lego.antilogout.event.EventHandler;
@@ -20,13 +20,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * Mixin for ServerPlayerEntity implementing LogoutRules.
  * Handles disconnect, AFK, combat state, and delayed tasks for AntiLogout.
  */
-@Mixin(ServerPlayerEntity.class)
+@Mixin(ServerPlayer.class)
 public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
     @Shadow
     private boolean disconnected;
 
     @Shadow
-    public ServerPlayNetworkHandler networkHandler;
+    public ServerGamePacketListenerImpl connection;
 
     @Unique
     private long allowDisconnectTime = 0;
@@ -54,8 +54,8 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
      */
     @Override
     public boolean al_allowDisconnect() {
-        return this.allowDisconnectTime != -1 && this.allowDisconnectTime <= System.currentTimeMillis()
-                && !AntiLogout.config.general.disableAllLogouts;
+        return AntiLogout.config.general.disableAllLogouts
+            || (this.allowDisconnectTime != -1 && this.allowDisconnectTime <= System.currentTimeMillis());
     }
 
     /**
@@ -64,7 +64,7 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
      */
     @Override
     public void al_setAllowDisconnectAt(long systemTime) {
-        if (AntiLogout.config.general.debug) AntiLogout.LOGGER.info("[COMBAT] Setting allowDisconnectAt for {} to {} ({} seconds from now)", ((ServerPlayerEntity)(Object)this).getName().getString(), systemTime, (systemTime == -1 ? "unlimited" : (systemTime - System.currentTimeMillis())/1000));
+        if (AntiLogout.config.general.debug) AntiLogout.LOGGER.info("[COMBAT] Setting allowDisconnectAt for {} to {} ({} seconds from now)", ((ServerPlayer)(Object)this).getName().getString(), systemTime, (systemTime == -1 ? "unlimited" : (systemTime - System.currentTimeMillis())/1000));
         this.allowDisconnectTime = systemTime;
     }
 
@@ -94,8 +94,8 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
         this.disconnected = true;
         // If this is an AFK disconnect, do not create a dummy or log combat/AFK disconnect
         if (!this.al_allowDisconnect() && !this.al_isAfkDisconnect()) {
-            DISCONNECTED_PLAYERS.add((ServerPlayerEntity) (Object) this);
-            if (AntiLogout.config.general.debug) AntiLogout.LOGGER.info("[DISCONNECT] {} disconnected while not allowed (combat/AFK).", ((ServerPlayerEntity)(Object)this).getName().getString());
+            DISCONNECTED_PLAYERS.add((ServerPlayer) (Object) this);
+            if (AntiLogout.config.general.debug) AntiLogout.LOGGER.info("[DISCONNECT] {} disconnected while not allowed (combat/AFK).", ((ServerPlayer)(Object)this).getName().getString());
         }
         // Always reset AFK flag after any disconnect
         if (this.al_isAfkDisconnect()) {
@@ -118,8 +118,8 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
      * Ensures isDisconnected returns correct value based on AntiLogout logic.
      * @param cir callback info for return value
      */
-    @Inject(method = "isDisconnected", at = @At("HEAD"), cancellable = true)
-    public void isDisconnected(CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hasDisconnected", at = @At("HEAD"), cancellable = true)
+    public void hasDisconnected(CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(this.al_allowDisconnect() && this.disconnected);
     }
 
@@ -128,11 +128,11 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
      * Cancels tick if player is fake/disconnected.
      * @param ci callback info
      */
-    @Inject(method = "playerTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;getInventory()Lnet/minecraft/entity/player/PlayerInventory;"), cancellable = true)
+    @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void playerTick(CallbackInfo ci) {
         if (this.al_isFake()) {
             if (this.al_allowDisconnect() && !this.executedDisconnect) {
-                this.networkHandler.disconnect(Text.empty());
+                this.connection.disconnect(Component.empty());
                 this.executedDisconnect = true; // Prevent disconnecting twice
             }
             ci.cancel();
@@ -143,25 +143,18 @@ public abstract class MixinServerPlayerLogoutRules implements LogoutRules {
     }
 
     /**
-     * Removes player from DISCONNECTED_PLAYERS on disconnect.
-     * @param ci callback info
-     */
-    @Inject(method = "onDisconnect", at = @At("TAIL"))
-    private void al_onDisconnect(CallbackInfo ci) {
-        DISCONNECTED_PLAYERS.remove((ServerPlayerEntity) (Object) this);
-    }
-
-    /**
      * Injects combat/AFK logic on player hurt (from old MixinLogoutRulesPlayer).
      * @param serverWorld the server world
      * @param damageSource the damage source
      * @param amount the amount of damage
      * @param cir callback info for return value
      */
-    @Inject(method = "damage(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;F)Z", at = @At("TAIL"))
-    private void onHurt(ServerWorld serverWorld, DamageSource damageSource, float amount,
+    @Inject(method = "hurtServer(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;F)Z", at = @At("TAIL"))
+    private void onHurt(ServerLevel serverWorld, DamageSource damageSource, float amount,
             CallbackInfoReturnable<Boolean> cir) {
-        EventHandler.onHurt((ServerPlayerEntity) (Object) this, damageSource);
+        if (cir.getReturnValue()) {
+            EventHandler.onHurt((ServerPlayer) (Object) this, damageSource);
+        }
     }
 
     /**
