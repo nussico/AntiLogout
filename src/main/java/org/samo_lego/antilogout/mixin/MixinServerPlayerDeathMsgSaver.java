@@ -1,30 +1,31 @@
 package org.samo_lego.antilogout.mixin;
 
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ServerPlayerEntity.class)
+@Mixin(ServerPlayer.class)
 public abstract class MixinServerPlayerDeathMsgSaver {
 
     @Unique
     private static final int MAX_DEATH_MESSAGE_LENGTH = 256;
     @Unique
-    private final ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
+    private final ServerPlayer self = (ServerPlayer) (Object) this;
 
-    @Unique
-    public abstract net.minecraft.world.World level();
+    @Shadow
+    public abstract ServerLevel level();
 
     /**
      * Injects into the player death handler to save death messages for fake/disconnected players.
@@ -32,28 +33,28 @@ public abstract class MixinServerPlayerDeathMsgSaver {
      * @param damageSource the source of damage
      * @param ci callback info
      */
-    @Inject(method = "onDeath", at = @At("RETURN"))
+    @Inject(method = "die", at = @At("RETURN"))
     private void onDeath(DamageSource damageSource, CallbackInfo ci) {
         if (((LogoutRules) this).al_isFake()) {
-            ServerWorld serverLevel = (ServerWorld) this.level();
-            boolean seeDeathMsgs = serverLevel.getGameRules().getBoolean(GameRules.SHOW_DEATH_MESSAGES);
+            ServerLevel serverLevel = (ServerLevel) this.level();
+            boolean seeDeathMsgs = serverLevel.getGameRules().get(GameRules.SHOW_DEATH_MESSAGES);
 
-            Text deathMsg;
+            Component deathMsg;
             if (seeDeathMsgs) {
-                deathMsg = self.getDamageTracker().getDeathMessage();
+                deathMsg = self.getCombatTracker().getDeathMessage();
 
                 if (deathMsg.getString().length() > MAX_DEATH_MESSAGE_LENGTH) {
-                    String string = deathMsg.asTruncatedString(MAX_DEATH_MESSAGE_LENGTH);
-                    var attackTooLongMsg = Text.translatable("death.attack.message_too_long",
-                            Text.literal(string).formatted(Formatting.YELLOW));
+                    String string = deathMsg.getString().substring(0, MAX_DEATH_MESSAGE_LENGTH);
+                        var attackTooLongMsg = Component.translatable("death.attack.message_too_long",
+                            Component.literal(string).withStyle(ChatFormatting.YELLOW));
 
-                    deathMsg = Text.translatable("death.attack.even_more_magic", self.getDisplayName())
-                            .styled(style -> style.withHoverEvent(new HoverEvent.ShowText(attackTooLongMsg)));
+                        deathMsg = Component.translatable("death.attack.even_more_magic", self.getDisplayName())
+                            .withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(attackTooLongMsg)));
                 }
             } else {
-                deathMsg = ScreenTexts.EMPTY;
+                deathMsg = CommonComponents.EMPTY;
             }
-            LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUuid(), deathMsg);
+            LogoutRules.SKIPPED_DEATH_MESSAGES.put(self.getUUID(), deathMsg);
         }
     }
 }

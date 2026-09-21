@@ -5,7 +5,6 @@
   "mixins": [
     "MixinConnection",
     "MixinPlayerList",
-    "MixinServerCommonPacketListenerImpl",
     "MixinServerConnectionListener",
     "MixinServerGamePacketListenerImpl",
     "MixinServerPlayerDeathMsgSaver",

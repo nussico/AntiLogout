@@ -1,10 +1,10 @@
 package org.samo_lego.antilogout.mixin;
 
-import net.minecraft.network.ClientConnection;
+import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.level.ServerPlayer;
 import org.samo_lego.antilogout.datatracker.LogoutRules;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,7 +19,7 @@ import java.util.List;
  * Mixin for PlayerManager to handle duplicate player connections.
  * Kicks players that are in {@link LogoutRules#DISCONNECTED_PLAYERS} when a player with the same UUID joins.
  */
-@Mixin(PlayerManager.class)
+@Mixin(PlayerList.class)
 public abstract class MixinPlayerList {
 
     @Shadow
@@ -27,7 +27,7 @@ public abstract class MixinPlayerList {
     private MinecraftServer server;
 
     @Shadow
-    public abstract List<ServerPlayerEntity> getPlayerList();
+    public abstract List<ServerPlayer> getPlayers();
 
     /**
      * Handles player connection when a player with the same UUID is already online.
@@ -37,20 +37,20 @@ public abstract class MixinPlayerList {
      * @param connectedClientData client data
      * @param ci callback info
      */
-    @Inject(method = "onPlayerConnect(Lnet/minecraft/network/ClientConnection;Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/server/network/ConnectedClientData;)V", at = @At("HEAD"))
-    private void onPlayerConnect(ClientConnection clientConnection, ServerPlayerEntity serverPlayerEntity,
-            ConnectedClientData connectedClientData,
+        @Inject(method = "placeNewPlayer", at = @At("HEAD"))
+        private void onPlayerConnect(Connection clientConnection, ServerPlayer serverPlayerEntity,
+            CommonListenerCookie connectedClientData,
             CallbackInfo ci) {
-        var matchingPlayers = getPlayerList().stream()
-                .filter(player -> player.getUuid().equals(serverPlayerEntity.getUuid()))
+        var matchingPlayers = getPlayers().stream()
+            .filter(player -> player.getUUID().equals(serverPlayerEntity.getUUID()))
                 .toList();
 
-        for (ServerPlayerEntity player : matchingPlayers) {
+        for (ServerPlayer player : matchingPlayers) {
             // Allow disconnect for the old player
             ((LogoutRules) player).al_setAllowDisconnect(true);
 
             // Remove the old player so the login process can continue
-            this.server.getPlayerManager().remove(player);
+            this.server.getPlayerList().remove(player);
 
             // Remove from dummy/disconnected list
             LogoutRules.DISCONNECTED_PLAYERS.remove(player);
