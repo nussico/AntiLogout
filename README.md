@@ -1,3 +1,6 @@
+# NEW MOD
+https://github.com/nussico/Deserter
+
 # AntiLogout
 
 **Originally by samo_lego, maintained/modified by pafer29555.**
