@@ -1,4 +1,4 @@
-# NEW MOD
+# I REMADE THE MOD
 https://github.com/nussico/Deserter
 
 # AntiLogout
